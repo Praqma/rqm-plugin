@@ -29,7 +29,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
-import hudson.model.UpdateSite;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -38,9 +37,11 @@ import hudson.util.FormValidation;
 import java.io.IOException;
 import java.io.PrintStream;
 import jenkins.model.Jenkins;
-import net.praqma.jenkins.rqm.request.RQMHttpClient;
-import net.praqma.jenkins.rqm.request.RQMUtilities;
+import net.praqma.jenkins.rqm.model.TestScript;
+import net.praqma.jenkins.rqm.model.exception.RequestException;
+import net.praqma.util.structure.Tuple;
 import net.sf.json.JSONObject;
+import org.apache.commons.httpclient.HttpStatus;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -51,7 +52,8 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class RqmPublisher extends Recorder {
 
-    public final String projectName,contextRoot,usrName,passwd,port,hostName;
+    public final String projectName,contextRoot,usrName,passwd,hostName,customProperty,testUrl;
+    public final int port;
     
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
@@ -59,13 +61,15 @@ public class RqmPublisher extends Recorder {
     }
     
     @DataBoundConstructor
-    public RqmPublisher(final String projectName, final String contextRoot, final String usrName, final String passwd, final String port, final String hostName) {
+    public RqmPublisher(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String testUrl) {
         this.projectName = projectName;
         this.contextRoot = contextRoot;
         this.hostName = hostName;
         this.usrName = usrName;
         this.passwd = passwd;
         this.port = port;
+        this.customProperty = customProperty;
+        this.testUrl = testUrl;
     }
 
     @Override
@@ -75,15 +79,36 @@ public class RqmPublisher extends Recorder {
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
         console.println(String.format("Project name: %s", projectName));
         console.println(String.format("QM Server Port: %s", port));
-        console.println(String.format("QM Server Host Name: %s", port));
+        console.println(String.format("QM Server Host Name: %s", hostName));
         console.println(String.format("Context root: %s", contextRoot));
-        
         console.println(String.format("Username: %s", usrName));
-        console.println(String.format("Password: %s", passwd));
+        console.println(String.format("Password: %s", passwd));        
+        console.println(String.format("Test request: %s", testUrl));
         
-        RQMHttpClient client = RQMUtilities.createClient(hostName, port, contextRoot, projectName, port, passwd);
+        Tuple<Integer,String> res = null;
+        try {
+           res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testUrl));
+           console.println( String.format( "Return code: %s", res.t1 ) );
+           console.println( res.t2 );
+           console.println ( new TestScript(res.t2).initialize());
+           
+           
+           
+           
+        } catch (Exception ex) {
+            if(ex instanceof RequestException) {
+                console.println( String.format( "Return code: %s", ((RequestException)ex).result.t1 ) );
+            }
+            
+            console.println("Failed to retrieve relevant test data, error when discarding wrapper exception was:");
+            if(ex.getCause() != null) {
+                ex.getCause().printStackTrace(console);
+            }
+            return false;
+        }
         
-        return true;
+        
+        return res != null && res.t1.equals(HttpStatus.SC_OK);
     }
     
     @Extension

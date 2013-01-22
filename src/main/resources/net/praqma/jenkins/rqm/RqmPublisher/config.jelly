@@ -9,6 +9,10 @@
        <f:textbox/>
     </f:entry>
     
+    <f:entry field="hostName" title="${%QM Server Host name}">
+       <f:textbox/>
+    </f:entry>
+    
     <f:entry field="port" title="${%QM Server Port}">
        <f:textbox/>
     </f:entry>
@@ -20,4 +24,13 @@
     <f:entry field="passwd" title="${%Password}">
        <f:password/>
     </f:entry>
+    
+    <f:entry field="customProperty" title="${%Custom property}">
+        <f:textbox default="GATEScript"/>        
+    </f:entry>
+    
+    <f:entry field="testUrl" title="TEST URL">
+        <f:textbox default="GATEScript"/>        
+    </f:entry>
+    
 </j:jelly>    

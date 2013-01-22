@@ -21,14 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.praqma.jenkins.rqm.request;
-
-import net.praqma.util.structure.Tuple;
+package net.praqma.jenkins.rqm.unit;
 
 /**
  *
  * @author Praqma
  */
-public interface RQMRequest {
-    public Tuple<Integer,String> executeRequest();
+public class TestSimpleModel {
+    
 }
