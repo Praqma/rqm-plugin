@@ -36,12 +36,19 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
+import net.praqma.jenkins.rqm.model.TestCase;
+import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
+import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.model.exception.RequestException;
 import net.praqma.util.structure.Tuple;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.NameValuePair;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -52,7 +59,7 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class RqmPublisher extends Recorder {
 
-    public final String projectName,contextRoot,usrName,passwd,hostName,customProperty,testUrl;
+    public final String projectName,contextRoot,usrName,passwd,hostName,customProperty,planName;
     public final int port;
     
     @Override
@@ -61,7 +68,7 @@ public class RqmPublisher extends Recorder {
     }
     
     @DataBoundConstructor
-    public RqmPublisher(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String testUrl) {
+    public RqmPublisher(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName) {
         this.projectName = projectName;
         this.contextRoot = contextRoot;
         this.hostName = hostName;
@@ -69,7 +76,7 @@ public class RqmPublisher extends Recorder {
         this.passwd = passwd;
         this.port = port;
         this.customProperty = customProperty;
-        this.testUrl = testUrl;
+        this.planName = planName;
     }
 
     @Override
@@ -78,32 +85,87 @@ public class RqmPublisher extends Recorder {
         
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
         console.println(String.format("Project name: %s", projectName));
+        console.println(String.format("Test plan name: %s", planName));    
         console.println(String.format("QM Server Port: %s", port));
         console.println(String.format("QM Server Host Name: %s", hostName));
         console.println(String.format("Context root: %s", contextRoot));
         console.println(String.format("Username: %s", usrName));
         console.println(String.format("Password: %s", passwd));        
-        console.println(String.format("Test request: %s", testUrl));
-        
+               
         Tuple<Integer,String> res = null;
         try {
-           res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testUrl));
-           console.println( String.format( "Return code: %s", res.t1 ) );
-           console.println( res.t2 );
-           console.println ( new TestScript(res.t2).initialize());
+            
+            /*
+             * Step 1 - Grab a feed with all the needed info for the selected test plan
+             */
            
-           
-           
-           
+            
+            TestPlan plan = new TestPlan(planName);
+            String planRequestFeed = plan.getFeedUrlForTestPlans(hostName, port, contextRoot, projectName);
+            NameValuePair[] requestParameters = plan.getParametersForFeedUrlForTestPlans();
+            
+            console.println("Getting TestPlans using feed url:");
+            console.println(planRequestFeed);
+            
+            res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters));
+            plan.initialize(res.t2);
+            
+            for(TestCase testcase : plan.getTestCases() ) {
+                res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
+                testcase.initialize(res.t2);
+                
+                
+            }
+            
+            for(TestSuite suite : plan.getTestSuites()) {
+                res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, suite.getRqmObjectResourceUrl(), null));
+                suite.initialize(res.t2);
+                for(TestCase testcase : suite.getTestcases()) {
+                    res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
+                    testcase.initialize(res.t2);
+                }                
+            }
+            
+            
+            
+            
+            console.println("Succesfully parsed test plan object");
+            console.println(plan);
+            
+            console.println("====LONG XML COMMING ====");
+            console.println(res.t2);
+            console.println("==== LONG XML ENDING ====");
+                   
+            
+            
+            String testCaseResourceUrl = "http://dkplan01:9080/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Team+Test+%28Testing%29/testscript/urn:com.ibm.rqm:testscript:588";
+   
+            res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testCaseResourceUrl, null));
+
+
+            console.println( String.format( "Return code: %s", res.t1 ) );
+            console.println( res.t2 );
+
+            List<TestScript> scripts = new ArrayList<TestScript>();
+            TestScript script = new TestScript().initialize(res.t2);  
+            scripts.add(script);
+
+            console.println(script);
+
+            scripts = build.getWorkspace().act(new RQMScriptExecutor(scripts, customProperty));
+
+            console.println("Script was executed. Returned object was:");
+            for(TestScript s : scripts) {
+                console.println(s);
+            }
+
         } catch (Exception ex) {
             if(ex instanceof RequestException) {
                 console.println( String.format( "Return code: %s", ((RequestException)ex).result.t1 ) );
             }
             
             console.println("Failed to retrieve relevant test data, error when discarding wrapper exception was:");
-            if(ex.getCause() != null) {
-                ex.getCause().printStackTrace(console);
-            }
+            ex.printStackTrace(console);
             return false;
         }
         

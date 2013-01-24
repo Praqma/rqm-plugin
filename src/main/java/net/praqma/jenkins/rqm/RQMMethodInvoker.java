@@ -27,54 +27,68 @@ import hudson.FilePath;
 import hudson.remoting.VirtualChannel;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URLEncoder;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
+import net.praqma.jenkins.rqm.model.exception.LoginException;
+import net.praqma.jenkins.rqm.model.exception.RequestException;
 import net.praqma.jenkins.rqm.request.RQMGetRequest;
 import net.praqma.jenkins.rqm.request.RQMHttpClient;
 import net.praqma.jenkins.rqm.request.RQMUtilities;
 import net.praqma.util.structure.Tuple;
+import org.apache.commons.httpclient.NameValuePair;
 
 /**
  *
  * @author Praqma
  */
 public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,String>> {
+    
+    //resourceUrl (for single-object)
+    
+    
     private transient RQMHttpClient client = null;
+   
+    public final NameValuePair[] parameterList;
     public final String hostName;
     public final String contextRoot;
-    public final String testUrl;
+    public final String requestString;
     public final String projectName;
     public final String userName;
     public final String passwd;
     public final int port;
     
-    public RQMMethodInvoker(final String hostName, final int port, final String contextRoot, final String projectName, final String userName, final String passwd) throws ClientCreationException {
+    public RQMMethodInvoker(final String hostName, final int port, final String contextRoot, final String projectName, final String userName, final String passwd, final String requestString, final NameValuePair[] parameterList) throws ClientCreationException {
         this.hostName = hostName;
         this.port = port;
         this.projectName = projectName;
         this.userName = userName;
         this.passwd = passwd;
         this.contextRoot = contextRoot;
-        this.testUrl = null;
+        this.requestString = requestString;
+        this.parameterList = parameterList;
+        
     }
     
-    public RQMMethodInvoker(final String hostName, final int port, final String contextRoot, final String projectName, final String userName, final String passwd, final String testUrl) throws ClientCreationException {
-        this.hostName = hostName;
-        this.port = port;
-        this.projectName = projectName;
-        this.userName = userName;
-        this.passwd = passwd;
-        this.contextRoot = contextRoot;
-        this.testUrl = testUrl;
-    }
-
     @Override
     public Tuple<Integer,String> invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
         Tuple<Integer,String> result = null;
         try {            
             client = RQMUtilities.createClient(hostName, port, contextRoot, projectName, userName, passwd);
-            result = new RQMGetRequest(client, testUrl).executeRequest();
-        } catch (Exception ex) {
+        } catch (MalformedURLException ex) {
             throw new IOException("RqmMethodInvoker exception", ex);
+        } catch (ClientCreationException cre) {
+            throw new IOException("RqmMethodInvoker exception(ClientCreationException)", cre);
+        }
+        
+        try {
+            result = new RQMGetRequest(client, requestString, parameterList).executeRequest();
+        } catch (LoginException loginex) {
+            throw new IOException("RqmMethodInvoker exception(LoginException)",loginex);
+        } catch (RequestException reqExeception) {
+            throw new IOException("RqmMethodInvoker exception(RequestException)",reqExeception);
+        } catch (Exception ex) {
+            throw new IOException("RqmMethodInvoker exception(Exception)", ex);
         }
 
         
