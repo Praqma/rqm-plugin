@@ -23,32 +23,10 @@
  */
 package net.praqma.jenkins.rqm;
 
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import net.praqma.jenkins.rqm.model.TestScript;
-
 /**
  *
  * @author Praqma
  */
-public class RQMScriptExecutor implements FileCallable<List<TestScript>> {
-
-    public final List<TestScript> scripts;
-    public final String customField;
+public class RQMProjectAction {
     
-    public RQMScriptExecutor(List<TestScript> scripts, String customField) {
-        this.scripts = scripts;
-        this.customField = customField;
-    }
-    
-    @Override
-    public List<TestScript> invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
-        for(TestScript script : scripts) {            
-            script.runScriptContainedInCustomField(customField, file);
-        }
-        return scripts;        
-    }    
 }

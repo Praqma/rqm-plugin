@@ -73,6 +73,7 @@ public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,Str
     @Override
     public Tuple<Integer,String> invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
         Tuple<Integer,String> result = null;
+        
         try {            
             client = RQMUtilities.createClient(hostName, port, contextRoot, projectName, userName, passwd);
         } catch (MalformedURLException ex) {

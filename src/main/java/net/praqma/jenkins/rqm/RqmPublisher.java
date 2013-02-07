@@ -93,52 +93,68 @@ public class RqmPublisher extends Recorder {
         console.println(String.format("Password: %s", passwd));        
                
         Tuple<Integer,String> res = null;
+        TestPlan plan;
         try {
-            
+
             /*
              * Step 1 - Grab a feed with all the needed info for the selected test plan
              */
-           
-            
-            TestPlan plan = new TestPlan(planName);
+            plan = new TestPlan(planName);
             String planRequestFeed = plan.getFeedUrlForTestPlans(hostName, port, contextRoot, projectName);
             NameValuePair[] requestParameters = plan.getParametersForFeedUrlForTestPlans();
             
             console.println("Getting TestPlans using feed url:");
-            console.println(planRequestFeed);
+            console.println(planRequestFeed+"?fields="+requestParameters[0].getValue());
             
             res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters));
-            plan.initialize(res.t2);
+            plan.initializeSingleResource(res.t2);
+            List<TestScript> scripts3 = new ArrayList<TestScript>();
             
-            for(TestCase testcase : plan.getTestCases() ) {
+            for(TestCase testcase : plan.getTestCases() ) {                  
                 res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
-                testcase.initialize(res.t2);
+                testcase.initializeSingleResource(res.t2);
+                for(TestScript script : testcase.getScripts()) {
+                    res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, script.getRqmObjectResourceUrl(), null));
+                    script.initializeSingleResource(res.t2);
+                }
                 
-                
+                scripts3.addAll(build.getWorkspace().act(new RQMScriptExecutor(testcase.getScripts(), customProperty)));
             }
             
+            console.println("====TEST CASE SCRIPTS NOT INI SUITE====");
+            
+            console.println(scripts3);
+            
+            console.println("====TEST CASE SCRIPTS NOT INI SUITE====");
+            
+            
+            List<TestScript> scripts2 = new ArrayList<TestScript>();
+                    
             for(TestSuite suite : plan.getTestSuites()) {
                 res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, suite.getRqmObjectResourceUrl(), null));
-                suite.initialize(res.t2);
+                suite.initializeSingleResource(res.t2);
                 for(TestCase testcase : suite.getTestcases()) {
                     res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
-                    testcase.initialize(res.t2);
-                }                
+                    testcase.initializeSingleResource(res.t2);
+                    for(TestScript script : testcase.getScripts()) {
+                        res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, script.getRqmObjectResourceUrl(), null));
+                        script.initializeSingleResource(res.t2);
+                        
+                    }
+                    //Execute scripts!
+                    scripts2.addAll(build.getWorkspace().act(new RQMScriptExecutor(testcase.getScripts(), customProperty)));
+                }
+ 
             }
             
-            
-            
-            
-            console.println("Succesfully parsed test plan object");
             console.println(plan);
+            console.println("=======AFTER=======");
+            console.print(scripts2);
+            RQMBuildAction action = new RQMBuildAction(plan, build);
+            build.addAction(action);
             
-            console.println("====LONG XML COMMING ====");
-            console.println(res.t2);
-            console.println("==== LONG XML ENDING ====");
-                   
-            
-            
-            String testCaseResourceUrl = "http://dkplan01:9080/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Team+Test+%28Testing%29/testscript/urn:com.ibm.rqm:testscript:588";
+            /*
+            String testCaseResourceUrl = "http://dkplan01.emea.group.grundfos.com:9080/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Team+Test+%28Testing%29/testscript/urn:com.ibm.rqm:testscript:588";
    
             res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testCaseResourceUrl, null));
 
@@ -147,7 +163,7 @@ public class RqmPublisher extends Recorder {
             console.println( res.t2 );
 
             List<TestScript> scripts = new ArrayList<TestScript>();
-            TestScript script = new TestScript().initialize(res.t2);  
+            TestScript script = new TestScript().initializeSingleResource(res.t2);  
             scripts.add(script);
 
             console.println(script);
@@ -158,6 +174,7 @@ public class RqmPublisher extends Recorder {
             for(TestScript s : scripts) {
                 console.println(s);
             }
+            */
 
         } catch (Exception ex) {
             if(ex instanceof RequestException) {
@@ -169,6 +186,7 @@ public class RqmPublisher extends Recorder {
             return false;
         }
         
+        build.getActions().add(new RQMBuildAction(plan,build));
         
         return res != null && res.t1.equals(HttpStatus.SC_OK);
     }
