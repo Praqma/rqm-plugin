@@ -23,10 +23,80 @@
  */
 package net.praqma.jenkins.rqm;
 
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Actionable;
+import hudson.model.ProminentProjectAction;
+import java.util.ArrayList;
+import java.util.List;
+import net.praqma.jenkins.rqm.model.TestCase;
+
 /**
  *
  * @author Praqma
  */
-public class RQMProjectAction {
+public class RQMProjectAction extends Actionable implements ProminentProjectAction {
     
+    public final AbstractProject<?,?> project;
+    private static final String PROJECT_NAME = "RQM Plugin";
+    private static final String PROJECT_URL = "prqm";
+    
+    public RQMProjectAction(AbstractProject<?,?> project) {
+        this.project = project;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return PROJECT_NAME;
+    }
+
+    @Override
+    public String getSearchUrl() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getIconFileName() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String getUrlName() {
+        return PROJECT_URL;
+    }
+    
+    private RQMBuildAction _getPrevious(AbstractBuild<?,?> build) {
+        RQMBuildAction action = build.getAction(RQMBuildAction.class);
+        if(action == null) {
+            while( build != null ) {
+                build = build.getPreviousCompletedBuild();
+                if(build.getAction(RQMBuildAction.class) != null) {
+                    return build.getAction(RQMBuildAction.class);
+                }
+            }
+        }
+        
+        return action;
+    }
+    
+    public RQMBuildAction getMostRecentNotNullRQMBuildAction() {
+        RQMBuildAction action = null;
+        AbstractBuild<?,?> current = project.getLastCompletedBuild();
+        if(current == null) {
+            return action;
+        } else {
+            action = _getPrevious(current);
+        }
+        return action;
+    }
+    
+    public RqmPublisher getRqmPublisher() {
+        return project.getPublishersList().get(RqmPublisher.class);
+    }
+    
+    public List<TestCase> getListOfSelectedTestCases(String customPropertyName) {
+        List<TestCase> list = new ArrayList<TestCase>();
+        list.addAll(getMostRecentNotNullRQMBuildAction().testplan.getTestCaseHavingCustomFieldWithName(customPropertyName));        
+        return list;
+    }
 }

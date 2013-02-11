@@ -27,6 +27,7 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -80,6 +81,11 @@ public class RqmPublisher extends Recorder {
     }
 
     @Override
+    public Action getProjectAction(AbstractProject<?, ?> project) {
+        return new RQMProjectAction(project);
+    }
+
+    @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream console = listener.getLogger();
         
@@ -90,7 +96,8 @@ public class RqmPublisher extends Recorder {
         console.println(String.format("QM Server Host Name: %s", hostName));
         console.println(String.format("Context root: %s", contextRoot));
         console.println(String.format("Username: %s", usrName));
-        console.println(String.format("Password: %s", passwd));        
+        console.println(String.format("Password: %s", passwd));
+        console.println(String.format("Custom field: %s", customProperty));
                
         Tuple<Integer,String> res = null;
         TestPlan plan;
@@ -190,15 +197,15 @@ public class RqmPublisher extends Recorder {
             
         }
         
-        public FormValidation doCheckPort(@QueryParameter String param) {
+        public FormValidation doCheckPort(@QueryParameter String value) {
             try {
-                Integer value = Integer.parseInt(param);
-                if(value <= 0) { 
+                Integer val = Integer.parseInt(value);
+                if(val <= 0) { 
                     return FormValidation.error("Illegal port number, must be a number and be above 0");
                 }
                 return FormValidation.ok();
             } catch (NumberFormatException nfe) {
-                return FormValidation.error("Illegal port number, must be a number and be above 0");
+                return FormValidation.error("Must be a number, your selection conatains non-numerical characters");
             }
         }
         
