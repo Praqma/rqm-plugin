@@ -147,29 +147,6 @@ public class RqmPublisher extends Recorder {
                 console.println(tc);
             }
             
-            
-            /*
-            String testCaseResourceUrl = "http://dkplan01.emea.group.grundfos.com:9080/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Team+Test+%28Testing%29/testscript/urn:com.ibm.rqm:testscript:588";
-   
-            res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testCaseResourceUrl, null));
-
-
-            console.println( String.format( "Return code: %s", res.t1 ) );
-            console.println( res.t2 );
-
-            List<TestScript> scripts = new ArrayList<TestScript>();
-            TestScript script = new TestScript().initializeSingleResource(res.t2);  
-            scripts.add(script);
-
-            console.println(script);
-
-            scripts = build.getWorkspace().act(new RQMScriptExecutor(scripts, customProperty));
-
-            console.println("Script was executed. Returned object was:");
-            for(TestScript s : scripts) {
-                console.println(s);
-            }
-            */
             build.getActions().add(action);
 
         } catch (Exception ex) {
