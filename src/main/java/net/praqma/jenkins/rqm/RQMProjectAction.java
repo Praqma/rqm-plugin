@@ -52,12 +52,12 @@ public class RQMProjectAction extends Actionable implements ProminentProjectActi
 
     @Override
     public String getSearchUrl() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
 
     @Override
     public String getIconFileName() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
 
     @Override

@@ -80,7 +80,6 @@
                                         </j:otherwise>                                    
                                     </j:choose>
                                     <tr>
-                                        
                                         <td>
                                             <a href="${scripz.rqmObjectResourceUrl}">${scripz.scriptTitle}</a>
                                         </td>                                    
