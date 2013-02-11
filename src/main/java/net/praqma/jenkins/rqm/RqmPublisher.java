@@ -94,6 +94,7 @@ public class RqmPublisher extends Recorder {
                
         Tuple<Integer,String> res = null;
         TestPlan plan;
+        RQMBuildAction action;
         try {
 
             /*
@@ -108,7 +109,6 @@ public class RqmPublisher extends Recorder {
             
             res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters));
             plan.initializeSingleResource(res.t2);
-            List<TestScript> scripts3 = new ArrayList<TestScript>();
             
             for(TestCase testcase : plan.getTestCases() ) {                  
                 res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
@@ -117,18 +117,7 @@ public class RqmPublisher extends Recorder {
                     res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, script.getRqmObjectResourceUrl(), null));
                     script.initializeSingleResource(res.t2);
                 }
-                
-                scripts3.addAll(build.getWorkspace().act(new RQMScriptExecutor(testcase.getScripts(), customProperty)));
             }
-            
-            console.println("====TEST CASE SCRIPTS NOT INI SUITE====");
-            
-            console.println(scripts3);
-            
-            console.println("====TEST CASE SCRIPTS NOT INI SUITE====");
-            
-            
-            List<TestScript> scripts2 = new ArrayList<TestScript>();
                     
             for(TestSuite suite : plan.getTestSuites()) {
                 res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, suite.getRqmObjectResourceUrl(), null));
@@ -138,20 +127,26 @@ public class RqmPublisher extends Recorder {
                     testcase.initializeSingleResource(res.t2);
                     for(TestScript script : testcase.getScripts()) {
                         res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, script.getRqmObjectResourceUrl(), null));
-                        script.initializeSingleResource(res.t2);
-                        
+                        script.initializeSingleResource(res.t2);                        
                     }
-                    //Execute scripts!
-                    scripts2.addAll(build.getWorkspace().act(new RQMScriptExecutor(testcase.getScripts(), customProperty)));
                 }
  
             }
             
-            console.println(plan);
-            console.println("=======AFTER=======");
-            console.print(scripts2);
-            RQMBuildAction action = new RQMBuildAction(plan, build);
-            build.addAction(action);
+            action = new RQMBuildAction(plan, build);
+            
+            console.println(String.format( "Test cases in total: %s", plan.getAllTestCases().size() ));
+            console.println(String.format( "Test cases with scripts in total: %s", plan.getAllTestCasesWithScripts().size()));
+            console.println(String.format( "Test cases with scripts having the specified custom property value: %s", plan.getTestCaseHavingCustomFieldWithName(customProperty).size()));
+            
+            for(TestCase tc : plan.getTestCaseHavingCustomFieldWithName(customProperty)) {
+                build.getWorkspace().act(new RQMTestCaseScriptExecutor(tc, customProperty));
+            }
+            
+            for(TestCase tc : plan.getTestCaseHavingCustomFieldWithName(customProperty)) {
+                console.println(tc);
+            }
+            
             
             /*
             String testCaseResourceUrl = "http://dkplan01.emea.group.grundfos.com:9080/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Team+Test+%28Testing%29/testscript/urn:com.ibm.rqm:testscript:588";
@@ -175,6 +170,7 @@ public class RqmPublisher extends Recorder {
                 console.println(s);
             }
             */
+            build.getActions().add(action);
 
         } catch (Exception ex) {
             if(ex instanceof RequestException) {
@@ -186,9 +182,9 @@ public class RqmPublisher extends Recorder {
             return false;
         }
         
-        build.getActions().add(new RQMBuildAction(plan,build));
         
-        return res != null && res.t1.equals(HttpStatus.SC_OK);
+        
+        return action != null && res != null && res.t1.equals(HttpStatus.SC_OK);
     }
     
     @Extension

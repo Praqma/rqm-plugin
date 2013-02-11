@@ -27,28 +27,28 @@ import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestScript;
 
 /**
  *
  * @author Praqma
  */
-public class RQMScriptExecutor implements FileCallable<List<TestScript>> {
+public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
 
-    public final List<TestScript> scripts;
+    public final TestCase tc;
     public final String customField;
     
-    public RQMScriptExecutor(List<TestScript> scripts, String customField) {
-        this.scripts = scripts;
+    public RQMTestCaseScriptExecutor(TestCase tc, String customField) {
+        this.tc = tc;
         this.customField = customField;
     }
     
     @Override
-    public List<TestScript> invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
-        for(TestScript script : scripts) {            
+    public TestCase invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
+        for(TestScript script : tc.getScripts()) {            
             script.runScriptContainedInCustomField(customField, file);
         }
-        return scripts;        
+        return tc;        
     }    
 }
