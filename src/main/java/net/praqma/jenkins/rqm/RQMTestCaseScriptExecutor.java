@@ -27,6 +27,7 @@ import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestScript;
 
@@ -36,6 +37,7 @@ import net.praqma.jenkins.rqm.model.TestScript;
  */
 public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
 
+    private static final Logger log = Logger.getLogger(RQMTestCaseScriptExecutor.class.getName());
     public final TestCase tc;
     public final String customField;
     
@@ -49,6 +51,9 @@ public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
         for(TestScript script : tc.getScripts()) {            
             script.runScriptContainedInCustomField(customField, file);
         }
+        TestCase.TestCaseTestResultStatus result = tc.getAggregatedTestCaseResult();
+        log.fine(String.format("Setting test case result to %s", result));
+        tc.setOverallResult(result);
         return tc;        
     }    
 }

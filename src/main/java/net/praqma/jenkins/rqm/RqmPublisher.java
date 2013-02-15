@@ -61,7 +61,7 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class RqmPublisher extends Recorder {
 
-    public final String projectName,contextRoot,usrName,passwd,hostName,customProperty,planName;
+    public final String projectName, contextRoot, usrName, passwd, hostName, customProperty, planName;
     public final int port;
     
     @Override
@@ -103,8 +103,10 @@ public class RqmPublisher extends Recorder {
         Tuple<Integer,String> res = null;
         TestPlan plan;
         RQMBuildAction action;
+        boolean success = true;
+        
         try {
-
+            
             /*
              * Step 1 - Grab a feed with all the needed info for the selected test plan
              */
@@ -138,8 +140,7 @@ public class RqmPublisher extends Recorder {
                         list.requestString = script.getRqmObjectResourceUrl();
                         build.getWorkspace().act(new RqmObjectCreator<TestScript>(script, list));                 
                     }
-                }
- 
+                } 
             }
             
             action = new RQMBuildAction(plan, build);
@@ -152,29 +153,28 @@ public class RqmPublisher extends Recorder {
             
             for(TestCase tc : interestingCases) {
                 build.getWorkspace().act(new RQMTestCaseScriptExecutor(tc, customProperty));
+                if(!tc.isPass()) {
+                    success = false;
+                }
             }
             
             for(TestCase tc : interestingCases) {
                 console.println(tc);
             }
             
-            console.println("Publishing results to RQM");
-            
-            console.println("Server url: "+RQMUtilities.getServerUrl(contextRoot, hostName, port));
-            console.println("Example tcer url: " +RQMUtilities.getSingleResourceBaseUrl(RQMUtilities.getServerUrl(contextRoot, hostName, port), projectName, "executionworkitem"));
+            console.println("Publishing results to RQM");            
             
             for(TestCase tc : interestingCases) {                
                 //Step 1: Create the test result based on the executed script.                                
                 TestCaseExecutionRecord tcer = new TestCaseExecutionRecord(tc);
-                String putRequestUrl = RQMUtilities.getSingleResourceBaseUrlWithId(RQMUtilities.getServerUrl(contextRoot, hostName, port), projectName, "executionworkitem", tc.getExternalAssignedTestCaseExecutonRecordId());
-                console.println("Trying to post with this url: "+putRequestUrl);
+                String putRequestUrl = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionworkitem", tc.getExternalAssignedTestCaseExecutonRecordId());
                 list.requestString = putRequestUrl;
                 list.methodType = "PUT";                
                 build.getWorkspace().act(new RqmObjectCreator<TestCaseExecutionRecord>(tcer, list));
                 
                 //Step 2: Create the test execution record with the testcase and the results.
                 TestExecutionResult ter = new TestExecutionResult(tcer);
-                list.requestString = RQMUtilities.getSingleResourceBaseUrlWithId(RQMUtilities.getServerUrl(contextRoot, hostName, port), projectName, "executionresult", tc.getExternalAssignedTestCaseResultId());
+                list.requestString = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionresult", tc.getExternalAssignedTestCaseResultId());
                 build.getWorkspace().act(new RqmObjectCreator<TestExecutionResult>(ter, list));
             }
             
@@ -189,10 +189,10 @@ public class RqmPublisher extends Recorder {
             
             console.println("Failed to retrieve relevant test data, error when discarding wrapper exception was:");
             ex.printStackTrace(console);
-            return false;
+            success = false;
         }
  
-        return true;
+        return success;
     }
     
     @Extension
