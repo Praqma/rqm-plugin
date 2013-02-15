@@ -37,18 +37,19 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.TestCase;
+import net.praqma.jenkins.rqm.model.TestCaseExecutionRecord;
+import net.praqma.jenkins.rqm.model.TestExecutionResult;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.model.exception.RequestException;
+import net.praqma.jenkins.rqm.request.RQMUtilities;
+import net.praqma.jenkins.rqm.request.RqmParameterList;
 import net.praqma.util.structure.Tuple;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.NameValuePair;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -114,27 +115,28 @@ public class RqmPublisher extends Recorder {
             console.println("Getting TestPlans using feed url:");
             console.println(planRequestFeed+"?fields="+requestParameters[0].getValue());
             
-            res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters));
-            plan.initializeSingleResource(res.t2);
+            RqmParameterList list = new RqmParameterList(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters, "GET", null);
             
-            for(TestCase testcase : plan.getTestCases() ) {                  
-                res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
-                testcase.initializeSingleResource(res.t2);
+            plan = build.getWorkspace().act(new RqmObjectCreator<TestPlan>(new TestPlan(planName), list));
+   
+            for(TestCase testcase : plan.getTestCases() ) {
+                list.requestString = testcase.getRqmObjectResourceUrl();
+                build.getWorkspace().act(new RqmObjectCreator<TestCase>(testcase, list));
                 for(TestScript script : testcase.getScripts()) {
-                    res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, script.getRqmObjectResourceUrl(), null));
-                    script.initializeSingleResource(res.t2);
+                    list.requestString = script.getRqmObjectResourceUrl();
+                    build.getWorkspace().act(new RqmObjectCreator<TestScript>(script, list));
                 }
             }
                     
             for(TestSuite suite : plan.getTestSuites()) {
-                res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, suite.getRqmObjectResourceUrl(), null));
-                suite.initializeSingleResource(res.t2);
+                list.requestString = suite.getRqmObjectResourceUrl();
+                build.getWorkspace().act(new RqmObjectCreator<TestSuite>(suite, list));
                 for(TestCase testcase : suite.getTestcases()) {
-                    res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, testcase.getRqmObjectResourceUrl(), null));
-                    testcase.initializeSingleResource(res.t2);
+                    list.requestString = testcase.getRqmObjectResourceUrl();
+                    build.getWorkspace().act(new RqmObjectCreator<TestCase>(testcase, list));
                     for(TestScript script : testcase.getScripts()) {
-                        res = build.getWorkspace().act(new RQMMethodInvoker(hostName, port, contextRoot, projectName, usrName, passwd, script.getRqmObjectResourceUrl(), null));
-                        script.initializeSingleResource(res.t2);                        
+                        list.requestString = script.getRqmObjectResourceUrl();
+                        build.getWorkspace().act(new RqmObjectCreator<TestScript>(script, list));                 
                     }
                 }
  
@@ -146,13 +148,37 @@ public class RqmPublisher extends Recorder {
             console.println(String.format( "Test cases with scripts in total: %s", plan.getAllTestCasesWithScripts().size()));
             console.println(String.format( "Test cases with scripts having the specified custom property value: %s", plan.getTestCaseHavingCustomFieldWithName(customProperty).size()));
             
-            for(TestCase tc : plan.getTestCaseHavingCustomFieldWithName(customProperty)) {
+            HashSet<TestCase> interestingCases = plan.getTestCaseHavingCustomFieldWithName(customProperty);
+            
+            for(TestCase tc : interestingCases) {
                 build.getWorkspace().act(new RQMTestCaseScriptExecutor(tc, customProperty));
             }
             
-            for(TestCase tc : plan.getTestCaseHavingCustomFieldWithName(customProperty)) {
+            for(TestCase tc : interestingCases) {
                 console.println(tc);
             }
+            
+            console.println("Publishing results to RQM");
+            
+            console.println("Server url: "+RQMUtilities.getServerUrl(contextRoot, hostName, port));
+            console.println("Example tcer url: " +RQMUtilities.getSingleResourceBaseUrl(RQMUtilities.getServerUrl(contextRoot, hostName, port), projectName, "executionworkitem"));
+            
+            for(TestCase tc : interestingCases) {                
+                //Step 1: Create the test result based on the executed script.                                
+                TestCaseExecutionRecord tcer = new TestCaseExecutionRecord(tc);
+                String putRequestUrl = RQMUtilities.getSingleResourceBaseUrlWithId(RQMUtilities.getServerUrl(contextRoot, hostName, port), projectName, "executionworkitem", tc.getExternalAssignedTestCaseExecutonRecordId());
+                console.println("Trying to post with this url: "+putRequestUrl);
+                list.requestString = putRequestUrl;
+                list.methodType = "PUT";                
+                build.getWorkspace().act(new RqmObjectCreator<TestCaseExecutionRecord>(tcer, list));
+                
+                //Step 2: Create the test execution record with the testcase and the results.
+                TestExecutionResult ter = new TestExecutionResult(tcer);
+                list.requestString = RQMUtilities.getSingleResourceBaseUrlWithId(RQMUtilities.getServerUrl(contextRoot, hostName, port), projectName, "executionresult", tc.getExternalAssignedTestCaseResultId());
+                build.getWorkspace().act(new RqmObjectCreator<TestExecutionResult>(ter, list));
+            }
+            
+            console.println("Done publishing results");
             
             build.getActions().add(action);
 
@@ -165,10 +191,8 @@ public class RqmPublisher extends Recorder {
             ex.printStackTrace(console);
             return false;
         }
-        
-        
-        
-        return action != null && res != null && res.t1.equals(HttpStatus.SC_OK);
+ 
+        return true;
     }
     
     @Extension

@@ -29,11 +29,14 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
 import net.praqma.jenkins.rqm.model.exception.LoginException;
 import net.praqma.jenkins.rqm.model.exception.RequestException;
 import net.praqma.jenkins.rqm.request.RQMGetRequest;
 import net.praqma.jenkins.rqm.request.RQMHttpClient;
+import net.praqma.jenkins.rqm.request.RQMPutRequest;
 import net.praqma.jenkins.rqm.request.RQMUtilities;
 import net.praqma.util.structure.Tuple;
 import org.apache.commons.httpclient.NameValuePair;
@@ -46,7 +49,7 @@ public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,Str
     
     //resourceUrl (for single-object)
     
-    
+    private static final Logger log = Logger.getLogger(RQMMethodInvoker.class.getName());
     private transient RQMHttpClient client = null;
    
     public final NameValuePair[] parameterList;
@@ -57,6 +60,8 @@ public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,Str
     public final String userName;
     public final String passwd;
     public final int port;
+    public final String methodType;
+    public final String requestContent;
     
     public RQMMethodInvoker(final String hostName, final int port, final String contextRoot, final String projectName, final String userName, final String passwd, final String requestString, final NameValuePair[] parameterList) throws ClientCreationException {
         this.hostName = hostName;
@@ -67,7 +72,22 @@ public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,Str
         this.contextRoot = contextRoot;
         this.requestString = requestString;
         this.parameterList = parameterList;
+        this.methodType = "GET";
+        this.requestContent = null;
         
+    }
+    
+    public RQMMethodInvoker(final String hostName, final int port, final String contextRoot, final String projectName, final String userName, final String passwd, final String requestString, final NameValuePair[] parameterList, final String methodType, final String requestContent) throws ClientCreationException {
+        this.hostName = hostName;
+        this.port = port;
+        this.projectName = projectName;
+        this.userName = userName;
+        this.passwd = passwd;
+        this.contextRoot = contextRoot;
+        this.requestString = requestString;
+        this.parameterList = parameterList;       
+        this.methodType = methodType;
+        this.requestContent = requestContent;
     }
     
     @Override
@@ -77,18 +97,29 @@ public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,Str
         try {            
             client = RQMUtilities.createClient(hostName, port, contextRoot, projectName, userName, passwd);
         } catch (MalformedURLException ex) {
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught MalformedURLException in invoke throwing IO Exception",ex);
             throw new IOException("RqmMethodInvoker exception", ex);
         } catch (ClientCreationException cre) {
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught ClientCreationException in invoke throwing IO Exception", cre);
             throw new IOException("RqmMethodInvoker exception(ClientCreationException)", cre);
         }
         
         try {
-            result = new RQMGetRequest(client, requestString, parameterList).executeRequest();
+            if(methodType.equals("GET")) {
+                result = new RQMGetRequest(client, requestString, parameterList).executeRequest();
+            } else if(methodType.equals("POST")) {
+                result = null;
+            } else {
+                result = new RQMPutRequest(client, userName, parameterList, requestContent).executeRequest();
+            }
         } catch (LoginException loginex) {
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught login exception in invoke");
             throw new IOException("RqmMethodInvoker exception(LoginException)",loginex);
         } catch (RequestException reqExeception) {
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught RequestException in invoke");
             throw new IOException("RqmMethodInvoker exception(RequestException)",reqExeception);
         } catch (Exception ex) {
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught Exception in invoke");
             throw new IOException("RqmMethodInvoker exception(Exception)", ex);
         }
 

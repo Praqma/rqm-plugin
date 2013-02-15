@@ -74,8 +74,7 @@ public class RQMProjectAction extends Actionable implements ProminentProjectActi
                     return build.getAction(RQMBuildAction.class);
                 }
             }
-        }
-        
+        }        
         return action;
     }
     
