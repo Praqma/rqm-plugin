@@ -29,12 +29,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
-import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
-import hudson.util.FormValidation;
+import hudson.tasks.Builder;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
@@ -52,25 +48,19 @@ import net.praqma.util.structure.Tuple;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.NameValuePair;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
  *
  * @author Praqma
  */
-public class RqmPublisher extends Recorder {
-
+public class RqmBuilder extends Builder {
+    
     public final String projectName, contextRoot, usrName, passwd, hostName, customProperty, planName;
     public final int port;
     
-    @Override
-    public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
-    }
-    
     @DataBoundConstructor
-    public RqmPublisher(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName) {
+    public RqmBuilder(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName) {
         this.projectName = projectName;
         this.contextRoot = contextRoot;
         this.hostName = hostName;
@@ -80,12 +70,7 @@ public class RqmPublisher extends Recorder {
         this.customProperty = customProperty;
         this.planName = planName;
     }
-
-    @Override
-    public Action getProjectAction(AbstractProject<?, ?> project) {
-        return new RQMProjectAction(project);
-    }
-
+    
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream console = listener.getLogger();
@@ -192,45 +177,34 @@ public class RqmPublisher extends Recorder {
             success = false;
         }
  
-        return success;
+        //SWITCH TO succes uplon release
+        return true;
     }
+
+    @Override
+    public Action getProjectAction(AbstractProject<?, ?> project) {
+        return new RQMProjectAction(project);
+    }
+
     
     @Extension
-    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+    public static class Descriptor extends BuildStepDescriptor<Builder> {
 
         @Override
-        public boolean isApplicable(Class<? extends AbstractProject> type) {
-            return type.equals(FreeStyleProject.class);
+        public boolean isApplicable(Class<? extends AbstractProject> arg0) {
+            return true;
         }
 
         @Override
         public String getDisplayName() {
-            return "RQM Test Aggregator";
+            return "RQM Build Publisher";
         }
-        
-        public DescriptorImpl() {
-            super(RqmPublisher.class);
-            load();
-        }
-        
+
         @Override
-        public Publisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            RqmPublisher publisher = req.bindJSON(RqmPublisher.class, formData);
+        public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            RqmBuilder builder = req.bindJSON(RqmBuilder.class, formData);
             save();
-            return publisher;            
-        }
-        
-        public FormValidation doCheckPort(@QueryParameter String value) {
-            try {
-                Integer val = Integer.parseInt(value);
-                if(val <= 0) { 
-                    return FormValidation.error("Illegal port number, must be a number and be above 0");
-                }
-                return FormValidation.ok();
-            } catch (NumberFormatException nfe) {
-                return FormValidation.error("Must be a number, your selection conatains non-numerical characters");
-            }
-        }
-        
-    } 
+            return builder;
+        }        
+    }
 }

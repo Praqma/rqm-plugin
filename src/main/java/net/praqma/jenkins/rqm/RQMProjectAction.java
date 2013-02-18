@@ -57,7 +57,7 @@ public class RQMProjectAction extends Actionable implements ProminentProjectActi
 
     @Override
     public String getIconFileName() {
-        return null;
+        return "/plugin/rqm-plugin/images/64x64/rqm-icon.png";        
     }
 
     @Override
@@ -89,9 +89,16 @@ public class RQMProjectAction extends Actionable implements ProminentProjectActi
         return action;
     }
     
-    public RqmPublisher getRqmPublisher() {
+    public String getChosenCustomProperty() {        
+        return getMostRecentNotNullRQMBuildAction().customKey;
+    }
+    
+    
+    
+    public RqmPublisher getRqmPublisher() {        
         return project.getPublishersList().get(RqmPublisher.class);
     }
+   
     
     public List<TestCase> getListOfSelectedTestCases(String customPropertyName) {
         List<TestCase> list = new ArrayList<TestCase>();

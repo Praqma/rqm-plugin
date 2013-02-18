@@ -26,7 +26,9 @@ package net.praqma.jenkins.rqm;
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestScript;
@@ -50,10 +52,48 @@ public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
     public TestCase invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
         for(TestScript script : tc.getScripts()) {            
             script.runScriptContainedInCustomField(customField, file);
+            try {
+                File f = new File(file, String.format("tc_%s_random_result.xml",script.getInternalId()));
+                int res = generateDummyResults(f);
+                
+                 script.setStatus(res == 0 ? TestScript.TestScriptRunStatus.SUCCESS : TestScript.TestScriptRunStatus.FAILURE);
+            } catch (Exception ex) {
+                log.fine("Whooops dummy method did not work");
+            }
         }
+         
+        
         TestCase.TestCaseTestResultStatus result = tc.getAggregatedTestCaseResult();
+                        
         log.fine(String.format("Setting test case result to %s", result));
         tc.setOverallResult(result);
         return tc;        
-    }    
+    }
+    /**
+     * Test method. Creates a bare minimum testCaseResult
+     * @param f
+     * @throws IOException 
+     */
+    private int generateDummyResults(File f) throws IOException {
+        int randNumber = new Random().nextInt(2);
+        StringBuilder builder = new StringBuilder();
+        builder.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+        builder.append("<testsuite>");
+        builder.append("<testcase classname=\"foo\" name=\"ASuccessfulTest\"/>");
+        builder.append("<testcase classname=\"foo\" name=\"AnotherSuccessfulTest\"/>");
+        if(randNumber == 0) {
+            builder.append("<testcase classname=\"foo\" name=\"AnotFailingTest\"/>");
+        } else {
+            builder.append("<testcase classname=\"foo\" name=\"AFailingTest\">");
+            builder.append("<failure type=\"NotEnoughFoo\"> details about failure </failure>");
+            builder.append("</testcase>");
+        }
+        builder.append("</testsuite>");
+        
+        FileWriter fw = new FileWriter(f,false);
+        fw.write(builder.toString());
+        fw.close();
+        return randNumber;
+        
+    }
 }

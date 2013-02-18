@@ -34,17 +34,19 @@ import net.praqma.jenkins.rqm.model.TestPlan;
 public class RQMBuildAction implements Action {
     
     private final String NAME = "RQM Test Report";
+    public final String customKey;
     public final TestPlan testplan;
     public final AbstractBuild<?, ?> build;
     
-    public RQMBuildAction(final TestPlan testplan, final AbstractBuild<?, ?> build) {
+    public RQMBuildAction(final TestPlan testplan, final String customKey, final AbstractBuild<?, ?> build) {
         this.build = build;
         this.testplan = testplan;
+        this.customKey = customKey;
     }
 
     @Override
     public String getIconFileName() {
-        return null;
+        return "/plugin/rqm-plugin/images/64x64/rqm-icon.png";        
     }
 
     @Override
