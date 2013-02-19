@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestScript;
@@ -54,15 +55,15 @@ public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
         for(TestScript script : tc.getScripts()) {            
             
             try {
-                File testCaseWorkspaceFolder = new File(file, String.format("tc_%s",tc.getInternalId()));
+                File testCaseWorkspaceFolder = new File(file, String.format("tc_%s", tc.getInternalId()));
                 testCaseWorkspaceFolder.mkdir();
                 script.runScriptContainedInCustomField(customField, testCaseWorkspaceFolder);
-                File f = new File(testCaseWorkspaceFolder, String.format("tc_%s_random_result.xml", script.getInternalId()));
-                generateDummyResults(f);                
-                //script.setStatus(res == 0 ? TestScript.TestScriptRunStatus.SUCCESS : TestScript.TestScriptRunStatus.FAILURE);                                                   
-                 
+                //File f = new File(testCaseWorkspaceFolder, String.format("tc_%s_random_result.xml", script.getInternalId()));
+                //generateDummyResults(f);                
+                //script.setStatus(res == 0 ? TestScript.TestScriptRunStatus.SUCCESS : TestScript.TestScriptRunStatus.FAILURE);                                                                    
             } catch (Exception ex) {
-                log.fine("Whooops dummy method did not work");
+                log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Error in script exectuion", ex);
+                throw new IOException("Caught exception in class RQMTestCaseScriptExectuor");
             }
         }         
         
