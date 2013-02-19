@@ -25,7 +25,6 @@ package net.praqma.jenkins.rqm;
 
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
-import hudson.tasks.junit.JUnitParser;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;

@@ -93,7 +93,6 @@ public class RqmBuilder extends Builder {
         boolean success = true;
         
         try {
-            
             /*
              * Step 1 - Grab a feed with all the needed info for the selected test plan
              */
