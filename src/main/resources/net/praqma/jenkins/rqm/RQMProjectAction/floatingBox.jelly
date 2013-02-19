@@ -35,8 +35,8 @@
                     <thead>
                         <tr>
                             <th>Test case description</th>
-                            <th>Test case status</th>
-                            <th>Test scripts</th>
+                            <th>Test case test result</th>
+                            <th>Test script execution status</th>
                         </tr>
                     </thead>
                     <tbody>                           
@@ -87,7 +87,6 @@
                                                         </td>
                                                     </tr>                         
                                                 </j:if>
-
 
                                                 <tr>
                                                     <td>

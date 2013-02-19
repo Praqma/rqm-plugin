@@ -31,6 +31,8 @@ import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tasks.junit.JUnitParser;
+import hudson.tasks.junit.TestResult;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
@@ -138,6 +140,15 @@ public class RqmBuilder extends Builder {
             
             for(TestCase tc : interestingCases) {
                 build.getWorkspace().act(new RQMTestCaseScriptExecutor(tc, customProperty));
+                JUnitParser parser = new JUnitParser(false);
+                TestResult tr = parser.parse(String.format("tc_%s/*.xml",tc.getInternalId()), build, launcher, listener);
+                if(tr.getFailCount() > 0) {
+                    tc.setOverallResult(TestCase.TestCaseTestResultStatus.FAIL);
+                } else {
+                    tc.setOverallResult(TestCase.TestCaseTestResultStatus.PASS);
+                }
+                
+                
                 if(!tc.isPass()) {
                     success = false;
                 }
@@ -155,7 +166,7 @@ public class RqmBuilder extends Builder {
                 String putRequestUrl = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionworkitem", tc.getExternalAssignedTestCaseExecutonRecordId());
                 list.requestString = putRequestUrl;
                 list.methodType = "PUT";                
-                build.getWorkspace().act(new RqmObjectCreator<TestCaseExecutionRecord>(tcer, list));
+                build.getWorkspace().act(new RqmObjectCreator<TestCaseExecutionRecord>(tcer, list));                
                 
                 //Step 2: Create the test execution record with the testcase and the results.
                 TestExecutionResult ter = new TestExecutionResult(tcer);

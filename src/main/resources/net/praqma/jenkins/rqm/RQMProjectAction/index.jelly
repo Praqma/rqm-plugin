@@ -31,14 +31,13 @@
                 <j:when test="${tp != null}">
                     <h4>Number of failed tests: ${tp.getTestFailureCount(chosenProperty)}</h4>            
                     <h4>Number of passed tests: ${tp.getTestPassCount(chosenProperty)}</h4>
-                    <h4>Number of undetermined tests: ${tp.getTestUnderterminedCount(chosenProperty)} </h4>
-                    <h4>index.jelly in RQMProjectAction</h4>
+                    <h4>Number of undetermined tests: ${tp.getTestUnderterminedCount(chosenProperty)}</h4>                    
                     <div style="width:900px;float:left;diplay:block;clear:left">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Test case description</th>
-                                    <th>Test case status</th>
+                                    <th>Script execution status</th>
                                     <th>Test scripts</th>
                                 </tr>
                             </thead>

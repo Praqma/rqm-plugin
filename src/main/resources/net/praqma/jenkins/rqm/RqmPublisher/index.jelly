@@ -37,7 +37,7 @@
                                 <thead>
                                     <tr>
                                         <th>Test case description</th>
-                                        <th>Test case status</th>
+                                        <th>Script execution status</th>
                                         <th>Test scripts</th>
                                     </tr>
                                 </thead>

@@ -25,6 +25,7 @@ package net.praqma.jenkins.rqm;
 
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
+import hudson.tasks.junit.JUnitParser;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -51,17 +52,19 @@ public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
     @Override
     public TestCase invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
         for(TestScript script : tc.getScripts()) {            
-            script.runScriptContainedInCustomField(customField, file);
+            
             try {
-                File f = new File(file, String.format("tc_%s_random_result.xml",script.getInternalId()));
-                int res = generateDummyResults(f);
-                
-                 script.setStatus(res == 0 ? TestScript.TestScriptRunStatus.SUCCESS : TestScript.TestScriptRunStatus.FAILURE);
+                File testCaseWorkspaceFolder = new File(file, String.format("tc_%s",tc.getInternalId()));
+                testCaseWorkspaceFolder.mkdir();
+                script.runScriptContainedInCustomField(customField, testCaseWorkspaceFolder);
+                File f = new File(testCaseWorkspaceFolder, String.format("tc_%s_random_result.xml", script.getInternalId()));
+                generateDummyResults(f);                
+                //script.setStatus(res == 0 ? TestScript.TestScriptRunStatus.SUCCESS : TestScript.TestScriptRunStatus.FAILURE);                                                   
+                 
             } catch (Exception ex) {
                 log.fine("Whooops dummy method did not work");
             }
-        }
-         
+        }         
         
         TestCase.TestCaseTestResultStatus result = tc.getAggregatedTestCaseResult();
                         
