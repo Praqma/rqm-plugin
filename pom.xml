@@ -7,7 +7,7 @@
     </parent>
     <groupId>net.praqma</groupId>
     <artifactId>rqm-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>RQM Plugin</name>
     <build>
@@ -63,21 +63,15 @@
         <dependency>
             <groupId>net.praqma</groupId>
             <artifactId>prqm-api</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
         </dependency>
     </dependencies>
-    
-    
-    
+
     <profiles>
         <profile>
             <id>cobertura</id>
             <activation>
                 <property>
-                    <!--
-                     Hudson by default defines a property BUILD_NUMBER which is used 
-                                        to enable the profile. 
-                    -->
                     <name>BUILD_NUMBER</name>
                 </property>
             </activation>
@@ -116,8 +110,8 @@
     </licenses>
     
     <scm>
-        <connection>scm:git:http://github.com/Praqma/RqmPlugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:Praqma/RqmPlugin.git</developerConnection>
-        <url>https://github.com/Praqma/RqmPlugin.git</url>
+        <connection>scm:git:http://github.com/Praqma/rqm-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/Praqma/rqm-plugin.git</developerConnection>
+        <url>https://github.com/Praqma/rqm-plugin.git</url>
     </scm>
 </project>
