@@ -140,13 +140,20 @@ public class RqmBuilder extends Builder {
             for(TestCase tc : interestingCases) {
                 build.getWorkspace().act(new RQMTestCaseScriptExecutor(tc, customProperty));
                 JUnitParser parser = new JUnitParser(false);
-                TestResult tr = parser.parse(String.format("tc_%s/*.xml",tc.getInternalId()), build, launcher, listener);
-                if(tr.getFailCount() > 0) {
-                    tc.setOverallResult(TestCase.TestCaseTestResultStatus.FAIL);
-                } else {
-                    tc.setOverallResult(TestCase.TestCaseTestResultStatus.PASS);
+                TestResult tr = null;
+                try {                    
+                    tr = parser.parse(String.format("tc_%s/*.xml",tc.getInternalId()), build, launcher, listener);                    
+                } catch (Exception ex) {                    
+                    tc.setOverallResult(TestCase.TestCaseTestResultStatus.NOT_TESTED);
                 }
                 
+                if(tr != null ) {
+                    if(tr.getFailCount() > 0) {
+                        tc.setOverallResult(TestCase.TestCaseTestResultStatus.FAIL);
+                    } else {
+                        tc.setOverallResult(TestCase.TestCaseTestResultStatus.PASS);
+                    }
+                }                
                 
                 if(!tc.isPass()) {
                     success = false;
