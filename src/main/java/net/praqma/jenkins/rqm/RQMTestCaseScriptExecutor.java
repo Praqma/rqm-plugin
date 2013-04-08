@@ -26,77 +26,72 @@ package net.praqma.jenkins.rqm;
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Random;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.praqma.jenkins.rqm.model.RQMObject;
 import net.praqma.jenkins.rqm.model.TestCase;
+import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
 
 /**
  *
  * @author Praqma
  */
-public class RQMTestCaseScriptExecutor implements FileCallable<TestCase> {
+public class RQMTestCaseScriptExecutor implements FileCallable<RQMObject> {
 
     private static final Logger log = Logger.getLogger(RQMTestCaseScriptExecutor.class.getName());
-    public final TestCase tc;
+    public final RQMObject item;
     public final String customField;
     
-    public RQMTestCaseScriptExecutor(TestCase tc, String customField) {
-        this.tc = tc;
+    public RQMTestCaseScriptExecutor(RQMObject item, String customField) {
+        this.item = item;
         this.customField = customField;
     }
     
     @Override
-    public TestCase invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
-        for(TestScript script : tc.getScripts()) {            
-            
+    public RQMObject invoke(File file, VirtualChannel vc) throws IOException, InterruptedException {
+        if(item instanceof TestCase) {
+            TestCase tc = (TestCase)item;
+            for(TestScript script : tc.getScripts()) {            
+
+                try {
+                    File testCaseWorkspaceFolder = new File(file, String.format("tc_%s", tc.getInternalId()));
+                    testCaseWorkspaceFolder.mkdir();
+                    script.runScriptContainedInCustomField(customField, testCaseWorkspaceFolder);                                                               
+                } catch (Exception ex) {
+                    log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Error in script exectuion", ex);
+                    throw new IOException("Caught exception in class RQMTestCaseScriptExectuor");
+                }
+            }         
+
+            TestCase.TestCaseTestResultStatus result = tc.getAggregatedTestCaseResult();
+
+            log.fine(String.format("Setting test case result to %s", result));
+            tc.setOverallResult(result);
+            return tc;
+        } else if(item instanceof TestPlan) {
             try {
-                File testCaseWorkspaceFolder = new File(file, String.format("tc_%s", tc.getInternalId()));
-                testCaseWorkspaceFolder.mkdir();
-                script.runScriptContainedInCustomField(customField, testCaseWorkspaceFolder);
-                //File f = new File(testCaseWorkspaceFolder, String.format("tc_%s_random_result.xml", script.getInternalId()));
-                //generateDummyResults(f);                
-                //script.setStatus(res == 0 ? TestScript.TestScriptRunStatus.SUCCESS : TestScript.TestScriptRunStatus.FAILURE);                                                                    
+                TestPlan tp = (TestPlan)item;
+                HashSet<TestCase> testCases = tp.getTestCaseHavingCustomFieldWithName(customField);
+                
+                for(TestCase tc : testCases) {
+                    File testCaseWorkspaceFolder = new File(file, String.format("tc_%s", tc.getInternalId()));
+                    for(TestScript tscr : tc.getScripts()) {
+                        tscr.runScriptContainedInCustomField(customField, testCaseWorkspaceFolder);
+                    }
+                    TestCase.TestCaseTestResultStatus result = tc.getAggregatedTestCaseResult();
+                    tc.setOverallResult(result);
+                }
+                
+                return tp;
             } catch (Exception ex) {
                 log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Error in script exectuion", ex);
                 throw new IOException("Caught exception in class RQMTestCaseScriptExectuor");
             }
-        }         
-        
-        TestCase.TestCaseTestResultStatus result = tc.getAggregatedTestCaseResult();
-                        
-        log.fine(String.format("Setting test case result to %s", result));
-        tc.setOverallResult(result);
-        return tc;        
-    }
-    /**
-     * Test method. Creates a bare minimum testCaseResult
-     * @param f
-     * @throws IOException 
-     */
-    private int generateDummyResults(File f) throws IOException {
-        int randNumber = new Random().nextInt(2);
-        StringBuilder builder = new StringBuilder();
-        builder.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-        builder.append("<testsuite>");
-        builder.append("<testcase classname=\"foo\" name=\"ASuccessfulTest\"/>");
-        builder.append("<testcase classname=\"foo\" name=\"AnotherSuccessfulTest\"/>");
-        if(randNumber == 0) {
-            builder.append("<testcase classname=\"foo\" name=\"AnotFailingTest\"/>");
-        } else {
-            builder.append("<testcase classname=\"foo\" name=\"AFailingTest\">");
-            builder.append("<failure type=\"NotEnoughFoo\"> details about failure </failure>");
-            builder.append("</testcase>");
         }
-        builder.append("</testsuite>");
         
-        FileWriter fw = new FileWriter(f,false);
-        fw.write(builder.toString());
-        fw.close();
-        return randNumber;
-        
+        return null;
     }
 }

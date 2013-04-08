@@ -122,7 +122,6 @@ public class RQMMethodInvoker implements FilePath.FileCallable<Tuple<Integer,Str
             throw new IOException("RqmMethodInvoker exception(Exception)", ex);
         }
 
-        
         return result;
     }
 }

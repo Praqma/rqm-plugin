@@ -106,39 +106,14 @@ public class RqmBuilder extends Builder {
             RqmParameterList list = new RqmParameterList(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters, "GET", null);
             
             plan = build.getWorkspace().act(new RqmObjectCreator<TestPlan>(new TestPlan(planName), list));
-   
-            for(TestCase testcase : plan.getTestCases() ) {
-                list.requestString = testcase.getRqmObjectResourceUrl();
-                build.getWorkspace().act(new RqmObjectCreator<TestCase>(testcase, list));
-                for(TestScript script : testcase.getScripts()) {
-                    list.requestString = script.getRqmObjectResourceUrl();
-                    build.getWorkspace().act(new RqmObjectCreator<TestScript>(script, list));
-                }
-            }
-                    
-            for(TestSuite suite : plan.getTestSuites()) {
-                list.requestString = suite.getRqmObjectResourceUrl();
-                build.getWorkspace().act(new RqmObjectCreator<TestSuite>(suite, list));
-                for(TestCase testcase : suite.getTestcases()) {
-                    list.requestString = testcase.getRqmObjectResourceUrl();
-                    build.getWorkspace().act(new RqmObjectCreator<TestCase>(testcase, list));
-                    for(TestScript script : testcase.getScripts()) {
-                        list.requestString = script.getRqmObjectResourceUrl();
-                        build.getWorkspace().act(new RqmObjectCreator<TestScript>(script, list));                 
-                    }
-                } 
-            }
-            
-            action = new RQMBuildAction(plan, customProperty, build);
-            
+
             console.println(String.format( "Test cases in total: %s", plan.getAllTestCases().size() ));
             console.println(String.format( "Test cases with scripts in total: %s", plan.getAllTestCasesWithScripts().size()));
             console.println(String.format( "Test cases with scripts having the specified custom property value: %s", plan.getTestCaseHavingCustomFieldWithName(customProperty).size()));
             
-            HashSet<TestCase> interestingCases = plan.getTestCaseHavingCustomFieldWithName(customProperty);
+            TestPlan planAfterRun = (TestPlan) build.getWorkspace().act(new RQMTestCaseScriptExecutor(plan, customProperty));
             
-            for(TestCase tc : interestingCases) {
-                build.getWorkspace().act(new RQMTestCaseScriptExecutor(tc, customProperty));
+            for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {
                 JUnitParser parser = new JUnitParser(false);
                 TestResult tr = null;
                 try {                    
@@ -160,13 +135,13 @@ public class RqmBuilder extends Builder {
                 }
             }
             
-            for(TestCase tc : interestingCases) {
+            for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {
                 console.println(tc);
             }
             
             console.println("Publishing results to RQM");            
             
-            for(TestCase tc : interestingCases) {                
+            for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {                
                 //Step 1: Create the test result based on the executed script.                                
                 TestCaseExecutionRecord tcer = new TestCaseExecutionRecord(tc);
                 String putRequestUrl = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionworkitem", tc.getExternalAssignedTestCaseExecutonRecordId());
@@ -181,6 +156,7 @@ public class RqmBuilder extends Builder {
             }
             
             console.println("Done publishing results");
+            action = new RQMBuildAction(planAfterRun, customProperty, build);
             
             build.getActions().add(action);
 
@@ -194,8 +170,7 @@ public class RqmBuilder extends Builder {
             success = false;
         }
  
-        //SWITCH TO succes uplon release
-        return true;
+        return success;
     }
 
     @Override
