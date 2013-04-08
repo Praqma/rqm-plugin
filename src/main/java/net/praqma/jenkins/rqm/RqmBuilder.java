@@ -23,12 +23,14 @@
  */
 package net.praqma.jenkins.rqm;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.tasks.junit.JUnitParser;
@@ -36,6 +38,8 @@ import hudson.tasks.junit.TestResult;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestCaseExecutionRecord;
@@ -60,6 +64,7 @@ public class RqmBuilder extends Builder {
     
     public final String projectName, contextRoot, usrName, passwd, hostName, customProperty, planName;
     public final int port;
+    private static final Logger log = Logger.getLogger(RqmBuilder.class.getName());
     
     @DataBoundConstructor
     public RqmBuilder(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName) {
@@ -131,7 +136,7 @@ public class RqmBuilder extends Builder {
                 }                
                 
                 if(!tc.isPass()) {
-                    success = false;
+                    build.setResult(Result.UNSTABLE);
                 }
             }
             
@@ -162,12 +167,13 @@ public class RqmBuilder extends Builder {
 
         } catch (Exception ex) {
             if(ex instanceof RequestException) {
-                console.println( String.format( "Return code: %s", ((RequestException)ex).result.t1 ) );
+                console.println( String.format( "Return code: %s", ((RequestException)ex).result.t1 ) );                
             }
             
             console.println("Failed to retrieve relevant test data, error when discarding wrapper exception was:");
             ex.printStackTrace(console);
-            success = false;
+            log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
+            throw new AbortException("Error in retrieving data from RQM, trace written to log");
         }
  
         return success;
@@ -177,7 +183,6 @@ public class RqmBuilder extends Builder {
     public Action getProjectAction(AbstractProject<?, ?> project) {
         return new RQMProjectAction(project);
     }
-
     
     @Extension
     public static class Descriptor extends BuildStepDescriptor<Builder> {
