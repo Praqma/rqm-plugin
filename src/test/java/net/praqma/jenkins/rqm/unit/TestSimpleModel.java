@@ -27,6 +27,19 @@ package net.praqma.jenkins.rqm.unit;
  *
  * @author Praqma
  */
+
+import net.praqma.jenkins.rqm.RQMBuildAction;
+import net.praqma.jenkins.rqm.model.TestPlan;
+import static org.junit.Assert.*;
+import org.junit.Test;
+
 public class TestSimpleModel {
     
+    @Test
+    public void testModel() {
+        TestPlan plan = new TestPlan();
+        RQMBuildAction action = new RQMBuildAction(plan, "myKey", null);
+        assertEquals(action.getDisplayName(),"RQM Test Report");
+        
+    }
 }
