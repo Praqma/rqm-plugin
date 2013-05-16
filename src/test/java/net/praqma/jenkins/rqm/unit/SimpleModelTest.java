@@ -31,15 +31,18 @@ package net.praqma.jenkins.rqm.unit;
 import net.praqma.jenkins.rqm.RQMBuildAction;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import static org.junit.Assert.*;
+import org.junit.Rule;
 import org.junit.Test;
 
-public class TestSimpleModel {
+public class SimpleModelTest {
+    
+    @Rule
+    public RqmUnitTestRule rule1 =  new RqmUnitTestRule();    
     
     @Test
-    public void testModel() {
+    public void modelTest() {
         TestPlan plan = new TestPlan();
         RQMBuildAction action = new RQMBuildAction(plan, "myKey", null);
-        assertEquals(action.getDisplayName(),"RQM Test Report");
-        
+        assertEquals(action.getDisplayName(),"RQM Test Report");                
     }
 }
