@@ -33,4 +33,10 @@
         <f:textbox default="GATEScript"/>        
     </f:entry>
     
+    <f:entry title="${%Per Test Case Builder}" help="nohelp">
+      <f:hetero-list name="iterativeTestCaseBuilders" targetType="${descriptor.rqmBuilderType}"
+           descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.iterativeTestCaseBuilders}"
+           addCaption="Add action" hasHeader="true"/>
+    </f:entry>
+  
 </j:jelly>    
