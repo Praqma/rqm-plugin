@@ -24,31 +24,31 @@
 package net.praqma.jenkins.rqm;
 
 import hudson.AbortException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.model.EnvironmentContributingAction;
+import hudson.model.TaskListener;
+import hudson.tasks.BuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.tasks.junit.JUnitParser;
-import hudson.tasks.junit.TestResult;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.TestCase;
-import net.praqma.jenkins.rqm.model.TestCaseExecutionRecord;
-import net.praqma.jenkins.rqm.model.TestExecutionResult;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
-import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.model.exception.RequestException;
-import net.praqma.jenkins.rqm.request.RQMUtilities;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
 import net.praqma.util.structure.Tuple;
 import net.sf.json.JSONObject;
@@ -65,9 +65,11 @@ public class RqmBuilder extends Builder {
     public final String projectName, contextRoot, usrName, passwd, hostName, customProperty, planName;
     public final int port;
     private static final Logger log = Logger.getLogger(RqmBuilder.class.getName());
-    
+    public final List<BuildStep> iterativeTestCaseBuilders;
+    public final List<BuildStep> singleTestCaseBuilder;
+     
     @DataBoundConstructor
-    public RqmBuilder(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName) {
+    public RqmBuilder(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> singleTestCaseBuilder) {
         this.projectName = projectName;
         this.contextRoot = contextRoot;
         this.hostName = hostName;
@@ -76,6 +78,40 @@ public class RqmBuilder extends Builder {
         this.port = port;
         this.customProperty = customProperty;
         this.planName = planName;
+        this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
+        this.singleTestCaseBuilder = singleTestCaseBuilder;
+        System.out.println("Size of:" +" "+iterativeTestCaseBuilders.size());
+    }
+    
+    public void executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, Set<TestCase> testCases) throws InterruptedException, IOException {
+        for(final TestCase tc : testCases) {           
+            for(BuildStep step : iterativeTestCaseBuilders) {
+                build.addAction(new EnvironmentContributingAction() {
+                    @Override                    
+                    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {                                                
+                        for (TestScript ts : tc.getScripts()) {
+                            env.put(customProperty.toUpperCase().replace(" ", "_"), new Random().nextInt(10)+"");
+                        }
+                    }
+
+                    @Override
+                    public String getIconFileName() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getDisplayName() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getUrlName() {
+                        return null;
+                    }
+                });
+                step.perform(build, launcher, listener);
+            }
+        }
     }
     
     @Override
@@ -90,8 +126,8 @@ public class RqmBuilder extends Builder {
         console.println(String.format("Context root: %s", contextRoot));
         console.println(String.format("Username: %s", usrName));
         console.println(String.format("Password: %s", passwd));
-        console.println(String.format("Custom field: %s", customProperty));
-               
+        console.println(String.format("Custom field: %s", customProperty));                       
+        
         Tuple<Integer,String> res = null;
         TestPlan plan;
         RQMBuildAction action;
@@ -101,6 +137,7 @@ public class RqmBuilder extends Builder {
             /*
              * Step 1 - Grab a feed with all the needed info for the selected test plan
              */
+            
             plan = new TestPlan(planName);
             String planRequestFeed = plan.getFeedUrlForTestPlans(hostName, port, contextRoot, projectName);
             NameValuePair[] requestParameters = plan.getParametersForFeedUrlForTestPlans();
@@ -111,13 +148,50 @@ public class RqmBuilder extends Builder {
             RqmParameterList list = new RqmParameterList(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters, "GET", null);
             
             plan = build.getWorkspace().act(new RqmObjectCreator<TestPlan>(new TestPlan(planName), list));
-
+            
             console.println(String.format( "Test cases in total: %s", plan.getAllTestCases().size() ));
             console.println(String.format( "Test cases with scripts in total: %s", plan.getAllTestCasesWithScripts().size()));
-            console.println(String.format( "Test cases with scripts having the specified custom property value: %s", plan.getTestCaseHavingCustomFieldWithName(customProperty).size()));
+            console.println(String.format( "Test cases with scripts having the specified custom property value(s): %s", plan.getTestCaseHavingCustomFieldWithName(customProperty).size()));
             
-            TestPlan planAfterRun = (TestPlan) build.getWorkspace().act(new RQMTestCaseScriptExecutor(plan, customProperty));
             
+            
+            //TestPlan planAfterRun = (TestPlan) build.getWorkspace().act(new RQMTestCaseScriptExecutor(plan, customProperty));
+            
+            executeIterativeTest(build, listener, launcher, plan.getTestCaseHavingCustomFieldWithName(customProperty.split(",")));
+            
+            /*
+            for(BuildStep bs : iterativeTestCaseBuilders) {
+
+                build.addAction(new EnvironmentContributingAction() {
+
+                    @Override
+                    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+                        env.put(customProperty.toUpperCase().replace(" ", "_"), new Random().nextInt(10)+"");
+                    }
+
+                    @Override
+                    public String getIconFileName() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getDisplayName() {
+                        return null;
+                    }
+
+                    @Override
+                    public String getUrlName() {
+                        return null;
+                    }
+                });
+                
+                bs.perform(build, launcher, listener);
+            }
+            */ 
+       
+            
+            /* UNCOMMENTED FOR TESTING */
+            /*
             for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {
                 JUnitParser parser = new JUnitParser(false);
                 TestResult tr = null;
@@ -139,13 +213,15 @@ public class RqmBuilder extends Builder {
                     build.setResult(Result.UNSTABLE);
                 }
             }
-            
+            */
+            /*
             for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {
                 console.println(tc);
             }
-            
+            */ 
             console.println("Publishing results to RQM");            
             
+            /*
             for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {                
                 //Step 1: Create the test result based on the executed script.                                
                 TestCaseExecutionRecord tcer = new TestCaseExecutionRecord(tc);
@@ -159,10 +235,11 @@ public class RqmBuilder extends Builder {
                 list.requestString = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionresult", tc.getExternalAssignedTestCaseResultId());
                 build.getWorkspace().act(new RqmObjectCreator<TestExecutionResult>(ter, list));
             }
-            
+            */
             console.println("Done publishing results");
-            action = new RQMBuildAction(planAfterRun, customProperty, build);
+            //action = new RQMBuildAction(planAfterRun, customProperty, build);
             
+            action = new RQMBuildAction(plan, usrName, build);
             build.getActions().add(action);
 
         } catch (Exception ex) {
@@ -191,6 +268,16 @@ public class RqmBuilder extends Builder {
         public boolean isApplicable(Class<? extends AbstractProject> arg0) {
             return true;
         }
+        
+        public List<hudson.model.Descriptor<? extends BuildStep>> getApplicableBuildSteps(AbstractProject<?, ?> p) {
+            List<hudson.model.Descriptor<? extends BuildStep>> list = new ArrayList<hudson.model.Descriptor<? extends BuildStep>>();
+            list.addAll(Builder.all());
+            System.out.println(list.size());
+            
+            return list;
+        }
+        
+        public final Class<RqmBuilder> rqmBuilderType = RqmBuilder.class;
 
         @Override
         public String getDisplayName() {
