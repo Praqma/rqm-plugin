@@ -29,30 +29,28 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.EnvironmentContributingAction;
-import hudson.model.TaskListener;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
+import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.model.exception.RequestException;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
-import net.praqma.util.structure.Tuple;
 import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -62,54 +60,93 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class RqmBuilder extends Builder {
     
-    public final String projectName, contextRoot, usrName, passwd, hostName, customProperty, planName;
-    public final int port;
+    public final String projectName, planName;
     private static final Logger log = Logger.getLogger(RqmBuilder.class.getName());
+    public final List<BuildStep> preTestBuildSteps;
+    public final List<BuildStep> postTestBuildSteps;
     public final List<BuildStep> iterativeTestCaseBuilders;
     public final List<BuildStep> singleTestCaseBuilder;
+    public final String suiteNames;
      
     @DataBoundConstructor
-    public RqmBuilder(final String projectName, final String contextRoot, final String usrName, final String passwd, final int port, final String hostName, final String customProperty, final String planName, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> singleTestCaseBuilder) {
+    public RqmBuilder(final String projectName, final String planName, final String suiteNames, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> singleTestCaseBuilder) {
         this.projectName = projectName;
-        this.contextRoot = contextRoot;
-        this.hostName = hostName;
-        this.usrName = usrName;
-        this.passwd = passwd;
-        this.port = port;
-        this.customProperty = customProperty;
         this.planName = planName;
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
         this.singleTestCaseBuilder = singleTestCaseBuilder;
-        System.out.println("Size of:" +" "+iterativeTestCaseBuilders.size());
+        this.preTestBuildSteps = null;
+        this.postTestBuildSteps = null;
+        this.suiteNames = StringUtils.isBlank(suiteNames) ? null : suiteNames;
     }
     
-    public void executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, Set<TestCase> testCases) throws InterruptedException, IOException {
-        for(final TestCase tc : testCases) {           
-            for(BuildStep step : iterativeTestCaseBuilders) {
-                build.addAction(new EnvironmentContributingAction() {
-                    @Override                    
-                    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {                                                
-                        for (TestScript ts : tc.getScripts()) {
-                            env.put(customProperty.toUpperCase().replace(" ", "_"), new Random().nextInt(10)+"");
-                        }
-                    }
+    /**
+     * Scrubs the attributes from RQM uppercasing them, and removing spaces in values
+     * @param env
+     * @param values 
+     */
+    private void _scrubEnv(EnvVars env, HashMap<String,String> values) {
+        for (String key : values.keySet()) {
+            env.put(key.toUpperCase(), values.get(key).replace(" ", "_"));
+        }
+    }
+    
+    public void executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final TestPlan plan, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) throws InterruptedException, IOException {
+        
+        if(preBuildSteps != null) {
+            for (BuildStep bs : preBuildSteps) {
+                listener.getLogger().println(String.format("Performing pre build step"));
+                bs.perform(build, launcher, listener);
+            }
+        }
+        
+        for(final TestSuite tsuite : plan.getSuitesWithNames(suiteNames)) {            
+            for(final TestCase tc : tsuite.getTestcases()) {
+                if(tc.getScripts().isEmpty()) {
+                    listener.getLogger().println(String.format("Skipping test case %s, no scripts attached", tc.getTestCaseTitle()));                
+                    continue;
+                }
 
-                    @Override
-                    public String getIconFileName() {
-                        return null;
-                    }
+                for(final TestScript ts : tc.getScripts()) {
+                    for(BuildStep step : iterativeTestCaseBuilders) {
+                       build.addAction(new EnvironmentContributingAction() {
+                           @Override                    
+                           public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+                               //Add relevant attributes from the plan, case and script to environment
+                               _scrubEnv(env, tsuite.attributes());
+                               _scrubEnv(env, plan.attributes());
+                               _scrubEnv(env, tc.attributes());                         
+                               _scrubEnv(env, ts.attributes());
+                           }
 
-                    @Override
-                    public String getDisplayName() {
-                        return null;
-                    }
+                           @Override
+                           public String getIconFileName() {
+                               return null;
+                           }
 
-                    @Override
-                    public String getUrlName() {
-                        return null;
-                    }
-                });
-                step.perform(build, launcher, listener);
+                           @Override
+                           public String getDisplayName() {
+                               return null;
+                           }
+
+                           @Override
+                           public String getUrlName() {
+                               return null;
+                           }
+                       });
+
+                       listener.getLogger().println(String.format( "Executing test case %s", tc.getTestCaseTitle() ) );
+                       step.perform(build, launcher, listener);
+                   }
+                }
+            }            
+        }
+        
+
+        
+        if(postBuildSteps != null) {
+            for(BuildStep bs : postBuildSteps) {
+                listener.getLogger().println(String.format("Performing post build step"));
+                bs.perform(build, launcher, listener);
             }
         }
     }
@@ -118,18 +155,19 @@ public class RqmBuilder extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream console = listener.getLogger();
         
+        /**
+         * Extract values from global configuration.
+         */
+        int port = ((RqmBuilder.RqmDescriptor)getDescriptor()).getPort();
+        String hostName = ((RqmBuilder.RqmDescriptor)getDescriptor()).getHostName();
+        String contextRoot = ((RqmBuilder.RqmDescriptor)getDescriptor()).getContextRoot();
+        String usrName = ((RqmBuilder.RqmDescriptor)getDescriptor()).getUsrName();
+        String passwd = ((RqmBuilder.RqmDescriptor)getDescriptor()).getPasswd();
+        
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
         console.println(String.format("Project name: %s", projectName));
-        console.println(String.format("Test plan name: %s", planName));    
-        console.println(String.format("QM Server Port: %s", port));
-        console.println(String.format("QM Server Host Name: %s", hostName));
-        console.println(String.format("Context root: %s", contextRoot));
-        console.println(String.format("Username: %s", usrName));
-        console.println(String.format("Password: %s", passwd));
-        console.println(String.format("Custom field: %s", customProperty));                       
-        
-        Tuple<Integer,String> res = null;
-        TestPlan plan;
+        console.println(String.format("Test plan name: %s", planName));
+
         RQMBuildAction action;
         boolean success = true;
         
@@ -138,7 +176,7 @@ public class RqmBuilder extends Builder {
              * Step 1 - Grab a feed with all the needed info for the selected test plan
              */
             
-            plan = new TestPlan(planName);
+            TestPlan plan = new TestPlan(planName);
             String planRequestFeed = plan.getFeedUrlForTestPlans(hostName, port, contextRoot, projectName);
             NameValuePair[] requestParameters = plan.getParametersForFeedUrlForTestPlans();
             
@@ -147,97 +185,13 @@ public class RqmBuilder extends Builder {
             
             RqmParameterList list = new RqmParameterList(hostName, port, contextRoot, projectName, usrName, passwd, planRequestFeed, requestParameters, "GET", null);
             
-            plan = build.getWorkspace().act(new RqmObjectCreator<TestPlan>(new TestPlan(planName), list));
+            RqmObjectCreator<TestPlan> object = new RqmObjectCreator<TestPlan>(plan, list);
+            plan = build.getWorkspace().act(object);
             
             console.println(String.format( "Test cases in total: %s", plan.getAllTestCases().size() ));
-            console.println(String.format( "Test cases with scripts in total: %s", plan.getAllTestCasesWithScripts().size()));
-            console.println(String.format( "Test cases with scripts having the specified custom property value(s): %s", plan.getTestCaseHavingCustomFieldWithName(customProperty).size()));
+            console.println(String.format( "Test cases within selected suites %s",plan.getAllTestCasesWithinSuites(suiteNames)));
             
-            
-            
-            //TestPlan planAfterRun = (TestPlan) build.getWorkspace().act(new RQMTestCaseScriptExecutor(plan, customProperty));
-            
-            executeIterativeTest(build, listener, launcher, plan.getTestCaseHavingCustomFieldWithName(customProperty.split(",")));
-            
-            /*
-            for(BuildStep bs : iterativeTestCaseBuilders) {
-
-                build.addAction(new EnvironmentContributingAction() {
-
-                    @Override
-                    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
-                        env.put(customProperty.toUpperCase().replace(" ", "_"), new Random().nextInt(10)+"");
-                    }
-
-                    @Override
-                    public String getIconFileName() {
-                        return null;
-                    }
-
-                    @Override
-                    public String getDisplayName() {
-                        return null;
-                    }
-
-                    @Override
-                    public String getUrlName() {
-                        return null;
-                    }
-                });
-                
-                bs.perform(build, launcher, listener);
-            }
-            */ 
-       
-            
-            /* UNCOMMENTED FOR TESTING */
-            /*
-            for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {
-                JUnitParser parser = new JUnitParser(false);
-                TestResult tr = null;
-                try {                    
-                    tr = parser.parse(String.format("tc_%s/*.xml",tc.getInternalId()), build, launcher, listener);                    
-                } catch (Exception ex) {                    
-                    tc.setOverallResult(TestCase.TestCaseTestResultStatus.NOT_TESTED);
-                }
-                
-                if(tr != null ) {
-                    if(tr.getFailCount() > 0) {
-                        tc.setOverallResult(TestCase.TestCaseTestResultStatus.FAIL);
-                    } else {
-                        tc.setOverallResult(TestCase.TestCaseTestResultStatus.PASS);
-                    }
-                }                
-                
-                if(!tc.isPass()) {
-                    build.setResult(Result.UNSTABLE);
-                }
-            }
-            */
-            /*
-            for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {
-                console.println(tc);
-            }
-            */ 
-            console.println("Publishing results to RQM");            
-            
-            /*
-            for(TestCase tc : planAfterRun.getTestCaseHavingCustomFieldWithName(customProperty)) {                
-                //Step 1: Create the test result based on the executed script.                                
-                TestCaseExecutionRecord tcer = new TestCaseExecutionRecord(tc);
-                String putRequestUrl = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionworkitem", tc.getExternalAssignedTestCaseExecutonRecordId());
-                list.requestString = putRequestUrl;
-                list.methodType = "PUT";                
-                build.getWorkspace().act(new RqmObjectCreator<TestCaseExecutionRecord>(tcer, list));                
-                
-                //Step 2: Create the test execution record with the testcase and the results.
-                TestExecutionResult ter = new TestExecutionResult(tcer);
-                list.requestString = RQMUtilities.getSingleResourceBaseUrlWithId(contextRoot, hostName, port, projectName, "executionresult", tc.getExternalAssignedTestCaseResultId());
-                build.getWorkspace().act(new RqmObjectCreator<TestExecutionResult>(ter, list));
-            }
-            */
-            console.println("Done publishing results");
-            //action = new RQMBuildAction(planAfterRun, customProperty, build);
+            executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
             
             action = new RQMBuildAction(plan, usrName, build);
             build.getActions().add(action);
@@ -255,15 +209,13 @@ public class RqmBuilder extends Builder {
  
         return success;
     }
-
-    @Override
-    public Action getProjectAction(AbstractProject<?, ?> project) {
-        return new RQMProjectAction(project);
-    }
     
     @Extension
-    public static class Descriptor extends BuildStepDescriptor<Builder> {
-
+    public static class RqmDescriptor extends BuildStepDescriptor<Builder> {
+        
+        private String contextRoot,hostName,usrName,passwd;
+        private int port;
+        
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> arg0) {
             return true;
@@ -272,8 +224,6 @@ public class RqmBuilder extends Builder {
         public List<hudson.model.Descriptor<? extends BuildStep>> getApplicableBuildSteps(AbstractProject<?, ?> p) {
             List<hudson.model.Descriptor<? extends BuildStep>> list = new ArrayList<hudson.model.Descriptor<? extends BuildStep>>();
             list.addAll(Builder.all());
-            System.out.println(list.size());
-            
             return list;
         }
         
@@ -281,14 +231,54 @@ public class RqmBuilder extends Builder {
 
         @Override
         public String getDisplayName() {
-            return "RQM Build Publisher";
+            return "RQM TestScript Iterator";
         }
 
         @Override
-        public Builder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            RqmBuilder builder = req.bindJSON(RqmBuilder.class, formData);
+        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+            contextRoot = json.getString("contextRoot");
+            usrName = json.getString("usrName");
+            hostName = json.getString("hostName");
+            passwd = json.getString("passwd");
+            port = json.getInt("port");
             save();
-            return builder;
-        }        
+            return true;
+        }
+
+        /**
+         * @return the contextRoot
+         */
+        public String getContextRoot() {
+            return contextRoot;
+        }
+
+        /**
+         * @return the hostName
+         */
+        public String getHostName() {
+            return hostName;
+        }
+
+        /**
+         * @return the usrName
+         */
+        public String getUsrName() {
+            return usrName;
+        }
+
+        /**
+         * @return the passwd
+         */
+        public String getPasswd() {
+            return passwd;
+        }
+
+        /**
+         * @return the port
+         */
+        public int getPort() {
+            return port;
+        }
+       
     }
 }
