@@ -8,31 +8,19 @@
     <f:entry field="planName" title="${%Test plan name}">
         <f:textbox/>
     </f:entry>
-    
-    <f:entry field="contextRoot" title="${%QM Context Root}">
-       <f:textbox/>
+
+    <f:entry field="suiteNames" title="${%Test suites}">
+        <f:textbox/>
     </f:entry>
-    
-    <f:entry field="hostName" title="${%QM Server Host name}">
-       <f:textbox/>
+
+    <f:entry field="preBuildSteps" title="${%Pre Build Steps}">
+        <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.preBuildSteps}" addCaption="Add pre build step" hasHeader="true"/>
     </f:entry>
-    
-    <f:entry field="port" title="${%QM Server Port}">
-       <f:textbox/>
+
+    <f:entry field="postBuildSteps" title="${%Post Build Step}">
+        <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.postBuildSteps}" addCaption="Add post build step" hasHeader="true"/>
     </f:entry>
-        
-    <f:entry field="usrName" title="${%Username}" >
-       <f:textbox/>
-    </f:entry>
-    
-    <f:entry field="passwd" title="${%Password}">
-       <f:password/>
-    </f:entry>
-    
-    <f:entry field="customProperty" title="${%Custom property}">
-        <f:textbox default="GATEScript"/>        
-    </f:entry>
-    
+
     <f:entry title="${%Per Test Case Builder}" help="nohelp">
       <f:hetero-list name="iterativeTestCaseBuilders" targetType="${descriptor.rqmBuilderType}"
            descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.iterativeTestCaseBuilders}"
