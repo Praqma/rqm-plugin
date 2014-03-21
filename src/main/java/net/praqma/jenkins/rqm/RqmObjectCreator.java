@@ -33,10 +33,11 @@ import net.praqma.jenkins.rqm.request.RqmParameterList;
 /**
  *
  * @author Praqma
+ * @param <T> The type of object you wish to be created.
  */
 public class RqmObjectCreator<T extends RQMObject> implements FilePath.FileCallable<T> {
-    private RqmParameterList parameters;
-    private T target;
+    private final RqmParameterList parameters;
+    private final T target;
  
     public RqmObjectCreator(T target, RqmParameterList parameters) {
         this.parameters = parameters;
