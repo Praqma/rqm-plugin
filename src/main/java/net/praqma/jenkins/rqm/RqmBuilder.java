@@ -45,6 +45,7 @@ import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
+import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.model.exception.RequestException;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
 import net.sf.json.JSONObject;
@@ -98,44 +99,49 @@ public class RqmBuilder extends Builder {
             }
         }
         
-        for(final TestCase tc : plan.getAllTestCasesWithinSuites(suiteNames)) {
-            if(tc.getScripts().isEmpty()) {
-                listener.getLogger().println(String.format( "Skipping test case %s, no scripts attached", tc.getTestCaseTitle() ));
-                continue;
-            }
-            
-            for(final TestScript ts : tc.getScripts()) {
-                for(BuildStep step : iterativeTestCaseBuilders) {
-                   build.addAction(new EnvironmentContributingAction() {
-                       @Override                    
-                       public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
-                           //Add relevant attributes from the plan, case and script to environment
-                           _scrubEnv(env, plan.attributes());
-                           _scrubEnv(env, tc.attributes());                         
-                           _scrubEnv(env, ts.attributes());
-                       }
+        for(final TestSuite tsuite : plan.getSuitesWithNames(suiteNames)) {            
+            for(final TestCase tc : tsuite.getTestcases()) {
+                if(tc.getScripts().isEmpty()) {
+                    listener.getLogger().println(String.format("Skipping test case %s, no scripts attached", tc.getTestCaseTitle()));                
+                    continue;
+                }
 
-                       @Override
-                       public String getIconFileName() {
-                           return null;
-                       }
+                for(final TestScript ts : tc.getScripts()) {
+                    for(BuildStep step : iterativeTestCaseBuilders) {
+                       build.addAction(new EnvironmentContributingAction() {
+                           @Override                    
+                           public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+                               //Add relevant attributes from the plan, case and script to environment
+                               _scrubEnv(env, tsuite.attributes());
+                               _scrubEnv(env, plan.attributes());
+                               _scrubEnv(env, tc.attributes());                         
+                               _scrubEnv(env, ts.attributes());
+                           }
 
-                       @Override
-                       public String getDisplayName() {
-                           return null;
-                       }
+                           @Override
+                           public String getIconFileName() {
+                               return null;
+                           }
 
-                       @Override
-                       public String getUrlName() {
-                           return null;
-                       }
-                   });
-                   
-                   listener.getLogger().println(String.format( "Executing test case %s", tc.getTestCaseTitle() ) );
-                   step.perform(build, launcher, listener);
-               }
-            }
+                           @Override
+                           public String getDisplayName() {
+                               return null;
+                           }
+
+                           @Override
+                           public String getUrlName() {
+                               return null;
+                           }
+                       });
+
+                       listener.getLogger().println(String.format( "Executing test case %s", tc.getTestCaseTitle() ) );
+                       step.perform(build, launcher, listener);
+                   }
+                }
+            }            
         }
+        
+
         
         if(postBuildSteps != null) {
             for(BuildStep bs : postBuildSteps) {
