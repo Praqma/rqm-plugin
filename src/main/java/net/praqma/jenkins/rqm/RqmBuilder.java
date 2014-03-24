@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,15 +66,13 @@ public class RqmBuilder extends Builder {
     public final List<BuildStep> preTestBuildSteps;
     public final List<BuildStep> postTestBuildSteps;
     public final List<BuildStep> iterativeTestCaseBuilders;
-    public final List<BuildStep> singleTestCaseBuilder;
     public final String suiteNames;
      
     @DataBoundConstructor
-    public RqmBuilder(final String projectName, final String planName, final String suiteNames, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> singleTestCaseBuilder) {
+    public RqmBuilder(final String projectName, final String planName, final String suiteNames, final List<BuildStep> iterativeTestCaseBuilders) {
         this.projectName = projectName;
         this.planName = planName;
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
-        this.singleTestCaseBuilder = singleTestCaseBuilder;
         this.preTestBuildSteps = null;
         this.postTestBuildSteps = null;
         this.suiteNames = StringUtils.isBlank(suiteNames) ? null : suiteNames;
@@ -84,7 +83,7 @@ public class RqmBuilder extends Builder {
      * @param env
      * @param values 
      */
-    private void _scrubEnv(EnvVars env, HashMap<String,String> values) {
+    private void addToEnvironment(EnvVars env, HashMap<String,String> values) {
         for (String key : values.keySet()) {
             env.put(key.toUpperCase(), values.get(key).replace(" ", "_"));
         }
@@ -93,8 +92,8 @@ public class RqmBuilder extends Builder {
     public void executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final TestPlan plan, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) throws InterruptedException, IOException {
         
         if(preBuildSteps != null) {
-            for (BuildStep bs : preBuildSteps) {
-                listener.getLogger().println(String.format("Performing pre build step"));
+            listener.getLogger().println(String.format("Performing pre build step"));
+            for (BuildStep bs : preBuildSteps) {                
                 bs.perform(build, launcher, listener);
             }
         }
@@ -112,10 +111,10 @@ public class RqmBuilder extends Builder {
                            @Override                    
                            public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
                                //Add relevant attributes from the plan, case and script to environment
-                               _scrubEnv(env, tsuite.attributes());
-                               _scrubEnv(env, plan.attributes());
-                               _scrubEnv(env, tc.attributes());                         
-                               _scrubEnv(env, ts.attributes());
+                               addToEnvironment(env, tsuite.attributes());
+                               addToEnvironment(env, plan.attributes());
+                               addToEnvironment(env, tc.attributes());                         
+                               addToEnvironment(env, ts.attributes());
                            }
 
                            @Override
@@ -133,7 +132,7 @@ public class RqmBuilder extends Builder {
                                return null;
                            }
                        });
-
+                       
                        listener.getLogger().println(String.format( "Executing test case %s", tc.getTestCaseTitle() ) );
                        step.perform(build, launcher, listener);
                    }
@@ -141,11 +140,9 @@ public class RqmBuilder extends Builder {
             }            
         }
         
-
-        
         if(postBuildSteps != null) {
+            listener.getLogger().println(String.format("Performing post build step"));
             for(BuildStep bs : postBuildSteps) {
-                listener.getLogger().println(String.format("Performing post build step"));
                 bs.perform(build, launcher, listener);
             }
         }
@@ -153,8 +150,7 @@ public class RqmBuilder extends Builder {
     
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        PrintStream console = listener.getLogger();
-        
+        PrintStream console = listener.getLogger();        
         /**
          * Extract values from global configuration.
          */
@@ -170,13 +166,14 @@ public class RqmBuilder extends Builder {
 
         RQMBuildAction action;
         boolean success = true;
-        
+        TestPlan plan = null;
+        HashSet<TestCase> selectedCases = new HashSet<TestCase>();
         try {
             /*
              * Step 1 - Grab a feed with all the needed info for the selected test plan
              */
             
-            TestPlan plan = new TestPlan(planName);
+            plan = new TestPlan(planName);
             String planRequestFeed = plan.getFeedUrlForTestPlans(hostName, port, contextRoot, projectName);
             NameValuePair[] requestParameters = plan.getParametersForFeedUrlForTestPlans();
             
@@ -192,9 +189,6 @@ public class RqmBuilder extends Builder {
             console.println(String.format( "Test cases within selected suites %s",plan.getAllTestCasesWithinSuites(suiteNames)));
             
             executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
-            
-            action = new RQMBuildAction(plan, usrName, build);
-            build.getActions().add(action);
 
         } catch (Exception ex) {
             if(ex instanceof RequestException) {
@@ -205,6 +199,9 @@ public class RqmBuilder extends Builder {
             ex.printStackTrace(console);
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
+        } finally {
+            action = new RQMBuildAction(plan, build, suiteNames);
+            build.getActions().add(action);
         }
  
         return success;

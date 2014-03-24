@@ -42,7 +42,7 @@ public class SimpleModelTest {
     @Test
     public void modelTest() {
         TestPlan plan = new TestPlan();
-        RQMBuildAction action = new RQMBuildAction(plan, "myKey", null);
+        RQMBuildAction action = new RQMBuildAction(plan, null, "yada");
         assertEquals(action.getDisplayName(),"RQM Test Report");                
     }
 }
