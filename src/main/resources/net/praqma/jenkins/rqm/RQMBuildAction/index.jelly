@@ -10,7 +10,7 @@
                         <th>Test case resource url</th>
                     </thead>
                     <tbody>
-                        <j:forEach items="${instance.getSelectedTestCases}" var="case">
+                        <j:forEach items="${it.getSelectedTestCases()}" var="case">
                             <tr>
                                 <td>${case.getTestCaseTitle()}</td>
                                 <td>${case.getRqmObjectResourceUrl()}</td>
