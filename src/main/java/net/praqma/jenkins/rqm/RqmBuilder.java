@@ -206,10 +206,9 @@ public class RqmBuilder extends Builder {
 
             plan = (TestPlan)collector.collect(listener, build);
             
-            console.println(String.format( "Test cases in total: %s", plan.getAllTestCases().size() ));
-            console.println(String.format( "Test cases within selected suites %s", plan.getAllTestCasesWithinSuites(suiteNames)));
+            console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCasesWithinSuites(suiteNames).size() ));
             
-           success = executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
+            success = executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
 
         } catch (Exception ex) {
             if(ex instanceof RequestException) {
@@ -247,6 +246,7 @@ public class RqmBuilder extends Builder {
             list.addAll(Builder.all());
             return list;
         }
+        
         @Override
         public String getDisplayName() {
             return "RQM TestScript Iterator";
