@@ -99,27 +99,26 @@ public class RqmBuilder extends Builder {
         this.collector = collector;
     }
 
-    private int getGlobalPort() {
+    public int getGlobalPort() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getPort();
     }
     
-    private String getGlobalHostName() {
+    public String getGlobalHostName() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getHostName();
     }
     
-    private String getGlobalContextRoot() {
+    public String getGlobalContextRoot() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getContextRoot();
     }
     
-    private String getGlobalUsrName() {
+    public String getGlobalUsrName() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getUsrName();
     }
     
-    private String getGlobalPasswd() {
+    public String getGlobalPasswd() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getPasswd();
     }
-    
-    
+        
     /**
      * Scrubs the attributes from RQM uppercasing them, and removing spaces in values
      * @param env
@@ -204,19 +203,15 @@ public class RqmBuilder extends Builder {
         boolean success = true;
         try {
 
-            plan = (TestPlan)collector.collect(listener, build);
-            
-            console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCasesWithinSuites(suiteNames).size() ));
-            
+            plan = (TestPlan)collector.collect(listener, build);            
+            console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCasesWithinSuites(suiteNames).size() ));            
             success = executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
 
         } catch (Exception ex) {
-            if(ex instanceof RequestException) {
-                console.println( String.format( "Return code: %s", ((RequestException)ex).result.t1 ) );                
-            }
-            
-            console.println("Failed to retrieve relevant test data, error when discarding wrapper exception was:");
+
+            console.println("Failed to retrieve relevant test data. Fulle trace writen to log");
             ex.printStackTrace(console);
+            
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
         } finally {
