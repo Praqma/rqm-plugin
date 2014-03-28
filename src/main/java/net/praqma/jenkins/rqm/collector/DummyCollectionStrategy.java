@@ -21,25 +21,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.praqma.jenkins.rqm;
+package net.praqma.jenkins.rqm.collector;
 
+import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.util.Arrays;
 import java.util.HashSet;
+import net.praqma.jenkins.rqm.RqmCollector;
+import net.praqma.jenkins.rqm.RqmCollectorDescriptor;
+import net.praqma.jenkins.rqm.model.RQMObject;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.model.exception.RQMObjectParseException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  *
  * @author mads
  */
-public class DummyCollectionStrategy extends RqmCollector<TestPlan> {
+public class DummyCollectionStrategy extends RqmCollector {
 
+    @DataBoundConstructor
     public DummyCollectionStrategy() { }
+    
+    @Extension
+    public static class DummyCollectionStrategyImpl extends RqmCollectorDescriptor {
+
+        @Override
+        public String getDisplayName() {
+            return "Dummy collection strategy";
+        }        
+    }
+    
 
     public TestPlan defaultTestPlan() throws RQMObjectParseException {
         TestPlan plan = new TestPlan("TestPlan1");
@@ -75,7 +91,7 @@ public class DummyCollectionStrategy extends RqmCollector<TestPlan> {
     }
 
     @Override
-    public TestPlan collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
-        return defaultTestPlan();
+    public <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
+        return (T)defaultTestPlan();
     }
 }

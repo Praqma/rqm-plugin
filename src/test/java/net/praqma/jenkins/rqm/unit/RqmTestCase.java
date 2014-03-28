@@ -23,7 +23,7 @@
  */
 package net.praqma.jenkins.rqm.unit;
 
-import net.praqma.jenkins.rqm.DummyCollectionStrategy;
+import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.BatchFile;
 import hudson.tasks.BuildStep;
@@ -73,17 +73,17 @@ public class RqmTestCase {
     public FreeStyleProject createSuccesConfiguration() throws Exception {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
 
-        RqmBuilder builder;
+        RqmBuilder builder = null;
       
         if(SystemUtils.IS_OS_WINDOWS) {        
             final BuildStep f = new BatchFile("dir");                      
             final BuildStep f2 = new BatchFile("dir");            
-            builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(f,f2), new DummyCollectionStrategy());
+            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(f,f2), new DummyCollectionStrategy());
             
         } else {
             final BuildStep s = new Shell("ls");
             final BuildStep s2 = new Shell("ls");
-            builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(s,s2), new DummyCollectionStrategy());
+            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(s,s2), new DummyCollectionStrategy());
         }
          
         
@@ -100,17 +100,17 @@ public class RqmTestCase {
     public FreeStyleProject creteFailingConfiguartion() throws Exception {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
 
-        RqmBuilder builder;
+        RqmBuilder builder = null;
       
         if(SystemUtils.IS_OS_WINDOWS) {        
             final BuildStep f = new BatchFile("exit 1");                      
             final BuildStep f2 = new BatchFile("dir");            
-            builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(f,f2), new DummyCollectionStrategy());
+            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(f,f2), new DummyCollectionStrategy());
             
         } else {
             final BuildStep s = new Shell("exit 1");
             final BuildStep s2 = new Shell("ls");
-            builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(s,s2), new DummyCollectionStrategy());
+            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(s,s2), new DummyCollectionStrategy());
         }
          
         

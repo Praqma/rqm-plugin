@@ -23,6 +23,7 @@
  */
 package net.praqma.jenkins.rqm;
 
+import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -60,62 +61,39 @@ import org.kohsuke.stapler.StaplerRequest;
  * @author Praqma
  */
 public class RqmBuilder extends Builder {
-    
-    public final String projectName, planName;
     private static final Logger log = Logger.getLogger(RqmBuilder.class.getName());
     public final List<BuildStep> preTestBuildSteps;
     public final List<BuildStep> postTestBuildSteps;
     public final List<BuildStep> iterativeTestCaseBuilders;
-    public final String suiteNames;
     public final RqmCollector collector;
      
     @DataBoundConstructor
-    public RqmBuilder(final String projectName, final String planName, final String suiteNames, final List<BuildStep> iterativeTestCaseBuilders) {
-        this.projectName = projectName;
-        this.planName = planName;
+    public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preTestBuildSteps, final List<BuildStep> postTestBuildSteps) {        
+        this.collector = collectionStrategy;
+        this.preTestBuildSteps = preTestBuildSteps;
+        this.postTestBuildSteps = postTestBuildSteps;
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
-        this.preTestBuildSteps = null;
-        this.postTestBuildSteps = null;
-        this.suiteNames = StringUtils.isBlank(suiteNames) ? null : suiteNames;
-        this.collector = new DummyCollectionStrategy();
+        collector.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());
         //this.collector = new RqmTestSuiteCollectionStrategy(getGlobalPort(), getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), planName, projectName, suiteNames);
     }
-    
-    /**
-     * Contructor for testing purposes
-     * @param projectName
-     * @param planName
-     * @param suiteNames
-     * @param iterativeTestCaseBuilders
-     * @param collector 
-     */
-    public RqmBuilder(final String projectName, final String planName, final String suiteNames, final List<BuildStep> iterativeTestCaseBuilders, RqmCollector collector) {
-        this.projectName = projectName;
-        this.planName = planName;
-        this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
-        this.preTestBuildSteps = null;
-        this.postTestBuildSteps = null;
-        this.suiteNames = StringUtils.isBlank(suiteNames) ? null : suiteNames;
-        this.collector = collector;
-    }
 
-    public int getGlobalPort() {
+    public final int getGlobalPort() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getPort();
     }
     
-    public String getGlobalHostName() {
+    public final String getGlobalHostName() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getHostName();
     }
     
-    public String getGlobalContextRoot() {
+    public final String getGlobalContextRoot() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getContextRoot();
     }
     
-    public String getGlobalUsrName() {
+    public final String getGlobalUsrName() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getUsrName();
     }
     
-    public String getGlobalPasswd() {
+    public final String getGlobalPasswd() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getPasswd();
     }
         
@@ -124,7 +102,7 @@ public class RqmBuilder extends Builder {
      * @param env
      * @param values 
      */
-    private void addToEnvironment(EnvVars env, HashMap<String,String> values) {
+    public static void addToEnvironment(EnvVars env, HashMap<String,String> values) {
         for (String key : values.keySet()) {
             env.put(key.toUpperCase(), values.get(key).replace(" ", "_"));
         }
@@ -141,7 +119,7 @@ public class RqmBuilder extends Builder {
             }
         }
         
-        for(final TestSuite tsuite : plan.getSuitesWithNames(suiteNames)) {            
+        for(final TestSuite tsuite : plan.getTestSuites()) {            
             for(final TestCase tc : tsuite.getTestcases()) {
                 if(tc.getScripts().isEmpty()) {
                     listener.getLogger().println(String.format("Skipping test case %s, no scripts attached", tc.getTestCaseTitle()));                
@@ -197,14 +175,13 @@ public class RqmBuilder extends Builder {
         PrintStream console = listener.getLogger();        
         
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
-        console.println(String.format("Project name: %s", projectName));
- 
+        
         TestPlan plan = null;
         boolean success = true;
         try {
 
             plan = (TestPlan)collector.collect(listener, build);            
-            console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCasesWithinSuites(suiteNames).size() ));            
+            console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCases().size() ));            
             success = executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
 
         } catch (Exception ex) {
@@ -218,7 +195,7 @@ public class RqmBuilder extends Builder {
             if(!success) {
                 console.println("Error caught in test execution, review log for details");
             }
-            RQMBuildAction action = new RQMBuildAction(plan, build, suiteNames);
+            RQMBuildAction action = new RQMBuildAction(plan, build, null);
             build.getActions().add(action);
         }
  

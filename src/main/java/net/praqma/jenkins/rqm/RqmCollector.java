@@ -23,24 +23,21 @@
  */
 package net.praqma.jenkins.rqm;
 
+import hudson.ExtensionPoint;
+import hudson.Launcher;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractDescribableImpl;
 import hudson.model.BuildListener;
-import java.io.Serializable;
+import hudson.tasks.BuildStep;
+import java.io.IOException;
+import java.util.List;
 import net.praqma.jenkins.rqm.model.RQMObject;
+import net.praqma.jenkins.rqm.model.TestPlan;
 
 /**
- *
- *         int port = ((RqmBuilder.RqmDescriptor)getDescriptor()).getPort();
-        String hostName = ((RqmBuilder.RqmDescriptor)getDescriptor()).getHostName();
-        String contextRoot = ((RqmBuilder.RqmDescriptor)getDescriptor()).getContextRoot();
-        String usrName = ((RqmBuilder.RqmDescriptor)getDescriptor()).getUsrName();
-        String passwd = ((RqmBuilder.RqmDescriptor)getDescriptor()).getPasswd();        
- * 
- * 
  * @author mads
  */
-public abstract class RqmCollector<T extends RQMObject> implements Serializable {
-    
+public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector> implements ExtensionPoint {    
     private String testPlan;
     private String project;
     private String hostName;
@@ -49,9 +46,10 @@ public abstract class RqmCollector<T extends RQMObject> implements Serializable 
     private String passwd;
     private int port;
     
+    
     public RqmCollector() { }
 
-    public RqmCollector(int port, String hostname, String contextRoot, String usrName, String passwd, final String testPlan, final String project ) {
+    public RqmCollector(int port, String hostname, String contextRoot, String usrName, String passwd, final String testPlan, final String project) {
         this.testPlan = testPlan;
         this.project = project;
         this.port = port;
@@ -61,7 +59,24 @@ public abstract class RqmCollector<T extends RQMObject> implements Serializable 
         this.hostName = hostname;
     }
     
-    public abstract T collect(BuildListener listener, AbstractBuild<?,?> build) throws Exception;
+    @Override
+    public RqmCollectorDescriptor getDescriptor() {
+        return (RqmCollectorDescriptor)super.getDescriptor();
+    }
+    
+    public abstract <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?,?> build) throws Exception;
+    public boolean execute(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders) throws Exception {
+        return true;
+    }
+    
+    
+    public void setup(String hostname, String contextRoot, String usrName, String passwd, int port) {
+        setHostName(hostname);
+        setContextRoot(contextRoot);
+        setUsrName(usrName);
+        setPasswd(passwd);
+        setPort(port);       
+    }    
 
     /**
      * @return the testPlan
