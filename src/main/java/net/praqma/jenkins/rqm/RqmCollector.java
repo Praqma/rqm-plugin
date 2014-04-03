@@ -23,45 +23,46 @@
  */
 package net.praqma.jenkins.rqm;
 
+import hudson.DescriptorExtensionList;
 import hudson.ExtensionPoint;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStep;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.RQMObject;
-import net.praqma.jenkins.rqm.model.TestPlan;
 
 /**
  * @author mads
  */
 public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector> implements ExtensionPoint {    
-    private String testPlan;
-    private String project;
+    
     private String hostName;
     private String contextRoot;
     private String usrName;
     private String passwd;
     private int port;
     
-    
     public RqmCollector() { }
-
-    public RqmCollector(int port, String hostname, String contextRoot, String usrName, String passwd, final String testPlan, final String project) {
-        this.testPlan = testPlan;
-        this.project = project;
-        this.port = port;
-        this.contextRoot = contextRoot;
-        this.usrName = usrName;
-        this.passwd = passwd;
-        this.hostName = hostname;
-    }
     
     @Override
     public RqmCollectorDescriptor getDescriptor() {
         return (RqmCollectorDescriptor)super.getDescriptor();
+    }
+    
+    public static DescriptorExtensionList<RqmCollector, RqmCollectorDescriptor> all() {
+        return Jenkins.getInstance().<RqmCollector, RqmCollectorDescriptor> getDescriptorList(RqmCollector.class);
+    }
+    
+    public static List<RqmCollectorDescriptor> getDescriptors() {
+        List<RqmCollectorDescriptor> list = new ArrayList<RqmCollectorDescriptor>();
+        for (RqmCollectorDescriptor d : all()) {
+            list.add(d);
+        }
+        return list;
     }
     
     public abstract <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?,?> build) throws Exception;
@@ -77,35 +78,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
         setPasswd(passwd);
         setPort(port);       
     }    
-
-    /**
-     * @return the testPlan
-     */
-    public String getTestPlan() {
-        return testPlan;
-    }
-
-    /**
-     * @param testPlan the testPlan to set
-     */
-    public void setTestPlan(String testPlan) {
-        this.testPlan = testPlan;
-    }
-
-    /**
-     * @return the project
-     */
-    public String getProject() {
-        return project;
-    }
-
-    /**
-     * @param project the project to set
-     */
-    public void setProject(String project) {
-        this.project = project;
-    }
-
+    
     /**
      * @return the hostName
      */

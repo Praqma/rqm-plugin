@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import net.praqma.jenkins.rqm.RqmBuilder;
+import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestSuite;
@@ -74,16 +75,17 @@ public class RqmTestCase {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
 
         RqmBuilder builder = null;
+        RqmCollector collector = new DummyCollectionStrategy();
       
         if(SystemUtils.IS_OS_WINDOWS) {        
             final BuildStep f = new BatchFile("dir");                      
             final BuildStep f2 = new BatchFile("dir");            
-            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(f,f2), new DummyCollectionStrategy());
+            builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
             
         } else {
             final BuildStep s = new Shell("ls");
             final BuildStep s2 = new Shell("ls");
-            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(s,s2), new DummyCollectionStrategy());
+            builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
         }
          
         
@@ -99,23 +101,21 @@ public class RqmTestCase {
     
     public FreeStyleProject creteFailingConfiguartion() throws Exception {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
-
+        RqmCollector collector = new DummyCollectionStrategy();
         RqmBuilder builder = null;
       
         if(SystemUtils.IS_OS_WINDOWS) {        
-            final BuildStep f = new BatchFile("exit 1");                      
-            final BuildStep f2 = new BatchFile("dir");            
-            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(f,f2), new DummyCollectionStrategy());
-            
+            final BuildStep f = new BatchFile("dir");                      
+            final BuildStep f2 = new BatchFile("exit 1");            
+            builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );            
         } else {
-            final BuildStep s = new Shell("exit 1");
-            final BuildStep s2 = new Shell("ls");
-            //builder = new RqmBuilder("testProject", "TestPlan1", "TestSuite1", Arrays.asList(s,s2), new DummyCollectionStrategy());
+            final BuildStep s = new Shell("ls");
+            final BuildStep s2 = new Shell("exit 1");
+            builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
         }
-         
         
-        List<Builder> blold = proj.getBuildersList().toList();
         
+        List<Builder> blold = proj.getBuildersList().toList();        
         proj.getBuildersList().clear();
         proj.getBuildersList().add(builder);
         proj.getBuildersList().addAll(blold);

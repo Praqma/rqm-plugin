@@ -23,7 +23,6 @@
  */
 package net.praqma.jenkins.rqm;
 
-import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,10 +46,7 @@ import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuite;
-import net.praqma.jenkins.rqm.model.exception.RequestException;
-import net.praqma.jenkins.rqm.request.RqmParameterList;
 import net.sf.json.JSONObject;
-import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -65,16 +60,46 @@ public class RqmBuilder extends Builder {
     public final List<BuildStep> preTestBuildSteps;
     public final List<BuildStep> postTestBuildSteps;
     public final List<BuildStep> iterativeTestCaseBuilders;
-    public final RqmCollector collector;
+    public final RqmCollector collectionStrategy;
      
     @DataBoundConstructor
     public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preTestBuildSteps, final List<BuildStep> postTestBuildSteps) {        
-        this.collector = collectionStrategy;
+        this.collectionStrategy = collectionStrategy;
         this.preTestBuildSteps = preTestBuildSteps;
         this.postTestBuildSteps = postTestBuildSteps;
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
-        collector.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());
+        collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());
         //this.collector = new RqmTestSuiteCollectionStrategy(getGlobalPort(), getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), planName, projectName, suiteNames);
+    }
+    
+    public boolean checkGlobaConfiguration() throws IOException {
+        List<String> errors = new ArrayList<String>();
+        
+        if(getGlobalPort() == 0) {
+            errors.add("Port not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getGlobalHostName())) {
+            errors.add("Hostname not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getGlobalContextRoot())) {
+            errors.add("Context root not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getGlobalUsrName())) {
+            errors.add("Username not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getGlobalPasswd())) {
+            errors.add("Password not defined in global configuration");
+        }
+        
+        if(!errors.isEmpty()) {
+            throw new IOException(String.format("Error in configuration%n%s", errors));
+        }
+        
+        return true;
     }
 
     public final int getGlobalPort() {
@@ -108,8 +133,7 @@ public class RqmBuilder extends Builder {
         }
     }
     
-    public boolean executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final TestPlan plan, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) throws InterruptedException, IOException {
-        
+    public boolean executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final TestPlan plan, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) throws InterruptedException, IOException {       
         boolean success = true;
         
         if(preBuildSteps != null) {
@@ -174,28 +198,28 @@ public class RqmBuilder extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream console = listener.getLogger();        
         
+        
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
         
         TestPlan plan = null;
         boolean success = true;
         try {
-
-            plan = (TestPlan)collector.collect(listener, build);            
+            checkGlobaConfiguration();
+            plan = (TestPlan)collectionStrategy.collect(listener, build);            
             console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCases().size() ));            
             success = executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
 
         } catch (Exception ex) {
-
-            console.println("Failed to retrieve relevant test data. Fulle trace writen to log");
-            ex.printStackTrace(console);
-            
+            success = false;
+            console.println(String.format("Failed to retrieve relevant test data. Message was:%n%s", ex.getMessage()));
+   
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
         } finally {
             if(!success) {
                 console.println("Error caught in test execution, review log for details");
             }
-            RQMBuildAction action = new RQMBuildAction(plan, build, null);
+            RqmBuildAction action = new RqmBuildAction(plan, build, null);
             build.getActions().add(action);
         }
  
@@ -205,8 +229,13 @@ public class RqmBuilder extends Builder {
     @Extension
     public static class RqmDescriptor extends BuildStepDescriptor<Builder> {
         
-        private String contextRoot,hostName,usrName,passwd;
+        private String contextRoot, hostName, usrName, passwd;
         private int port;
+ 
+        public RqmDescriptor() {
+            super(RqmBuilder.class);
+            load();
+        }
         
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> arg0) {
@@ -218,6 +247,12 @@ public class RqmBuilder extends Builder {
             list.addAll(Builder.all());
             return list;
         }
+        
+        public List<RqmCollectorDescriptor> getCollectionStrategies() {
+            List<RqmCollectorDescriptor> descriptors = new ArrayList<RqmCollectorDescriptor>();
+            descriptors.addAll(RqmCollector.getDescriptors());
+            return descriptors;
+        } 
         
         @Override
         public String getDisplayName() {

@@ -43,23 +43,27 @@ import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuite;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
 import org.apache.commons.httpclient.NameValuePair;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  *
  * @author mads
  */
 public class RqmTestSuiteCollectionStrategy extends RqmCollector {
-    protected final String suiteNames;
+    public final String suiteNames;
+    public final String planName;
+    public final String projectName;
     
-    
-    public RqmTestSuiteCollectionStrategy(int port, String hostname, String contextRoot, String usrName, String passwd, final String testPlan, final String project, final String suiteNames ) {
-        super(port, hostname, contextRoot, usrName, passwd, testPlan, project);
+    @DataBoundConstructor
+    public RqmTestSuiteCollectionStrategy(final String planName, final String projectName, final String suiteNames ) {
         this.suiteNames = suiteNames;
+        this.planName = planName;
+        this.projectName = projectName;
     }
     
     @Extension
     public static class RqmTestSuiteCollectionStrategyImpl extends RqmCollectorDescriptor {
-
+        
         @Override
         public String getDisplayName() {
             return "Test suite collection stategy";
@@ -68,11 +72,11 @@ public class RqmTestSuiteCollectionStrategy extends RqmCollector {
 
     @Override
     public  <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
-        TestPlan plan = new TestPlan(getTestPlan());
-        String planRequestFeed = plan.getFeedUrlForTestPlans(getHostName(), getPort(), getContextRoot(), getProject());
+        TestPlan plan = new TestPlan(planName);
+        String planRequestFeed = plan.getFeedUrlForTestPlans(getHostName(), getPort(), getContextRoot(), projectName);
 
         NameValuePair[] requestParameters = plan.getParametersForFeedUrlForTestPlans();
-        RqmParameterList list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), getProject(), getUsrName(), getPasswd(), planRequestFeed, requestParameters, "GET", null);
+        RqmParameterList list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), planRequestFeed, requestParameters, "GET", null);
   
         listener.getLogger().println("Getting TestPlans using feed url:");
         listener.getLogger().println(planRequestFeed+"?fields="+requestParameters[0].getValue());

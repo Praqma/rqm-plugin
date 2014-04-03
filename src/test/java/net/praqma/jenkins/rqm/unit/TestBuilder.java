@@ -27,7 +27,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import net.praqma.jenkins.rqm.RQMBuildAction;
+import net.praqma.jenkins.rqm.RqmBuildAction;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -43,7 +43,7 @@ public class TestBuilder extends RqmTestCase {
         
         AbstractBuild<?,?> build = proj.scheduleBuild2(0).get();
         
-        RQMBuildAction action = build.getAction(RQMBuildAction.class);
+        RqmBuildAction action = build.getAction(RqmBuildAction.class);
         assertNotNull(action);
 
         assertEquals(2, action.getSelectedTestCases().length);
