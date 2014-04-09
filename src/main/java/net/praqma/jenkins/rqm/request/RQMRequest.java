@@ -21,36 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.praqma.jenkins.rqm;
+package net.praqma.jenkins.rqm.request;
 
-import hudson.FilePath;
-import hudson.remoting.VirtualChannel;
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import net.praqma.jenkins.rqm.model.RqmObject;
-import net.praqma.jenkins.rqm.request.RqmParameterList;
+import net.praqma.jenkins.rqm.model.exception.LoginException;
+import net.praqma.jenkins.rqm.model.exception.RequestException;
+import net.praqma.util.structure.Tuple;
 
 /**
  *
  * @author Praqma
- * @param <T> The type of object you wish to be created.
  */
-public class RqmObjectCreator<T extends RqmObject> implements FilePath.FileCallable<List<T>> {
-    private final RqmParameterList parameters;
-    private final T target;
- 
-    public RqmObjectCreator(Class<T> target, RqmParameterList parameters) throws IllegalAccessException, InstantiationException {
-        this.parameters = parameters;
-        this.target = target.newInstance();
-    }
-
-    @Override
-    public List<T> invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
-        if(parameters.methodType.equals("GET")) {
-            return (List<T>)target.readMultiple(parameters);
-        } else {
-            return (List<T>)target.createOrUpdate(parameters);
-        }        
-    }
+public interface RQMRequest {
+    public Tuple<Integer,String> executeRequest() throws LoginException, RequestException;
 }

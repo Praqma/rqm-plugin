@@ -30,7 +30,6 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.EnvironmentContributingAction;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -42,10 +41,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
-import net.praqma.jenkins.rqm.model.TestScript;
-import net.praqma.jenkins.rqm.model.TestSuite;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -132,87 +128,20 @@ public class RqmBuilder extends Builder {
             env.put(key.toUpperCase(), values.get(key).replace(" ", "_"));
         }
     }
-    
-    public boolean executeIterativeTest(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final TestPlan plan, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) throws InterruptedException, IOException {       
-        boolean success = true;
-        
-        if(preBuildSteps != null) {
-            listener.getLogger().println(String.format("Performing pre build step"));
-            for (BuildStep bs : preBuildSteps) {                
-                success &= bs.perform(build, launcher, listener);
-            }
-        }
-        
-        for(final TestSuite tsuite : plan.getTestSuites()) {            
-            for(final TestCase tc : tsuite.getTestcases()) {
-                if(tc.getScripts().isEmpty()) {
-                    listener.getLogger().println(String.format("Skipping test case %s, no scripts attached", tc.getTestCaseTitle()));                
-                    continue;
-                }
-
-                for(final TestScript ts : tc.getScripts()) {
-                    for(BuildStep step : iterativeTestCaseBuilders) {
-                       build.addAction(new EnvironmentContributingAction() {
-                           @Override                    
-                           public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
-                               addToEnvironment(env, tsuite.attributes());
-                               addToEnvironment(env, plan.attributes());
-                               addToEnvironment(env, tc.attributes());                         
-                               addToEnvironment(env, ts.attributes());
-                           }
-
-                           @Override
-                           public String getIconFileName() {
-                               return null;
-                           }
-
-                           @Override
-                           public String getDisplayName() {
-                               return null;
-                           }
-
-                           @Override
-                           public String getUrlName() {
-                               return null;
-                           }
-                       });
-                       
-                       listener.getLogger().println(String.format( "Executing test case %s", tc.getTestCaseTitle() ) );                       
-                       success &= step.perform(build, launcher, listener);
-
-                   }
-                }
-            }            
-        }
-        
-        if(postBuildSteps != null) {
-            listener.getLogger().println(String.format("Performing post build step"));
-            for(BuildStep bs : postBuildSteps) {
-                success &= bs.perform(build, launcher, listener);
-            }
-        }
-        return success;
-    }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        PrintStream console = listener.getLogger();        
-        
-        
+        PrintStream console = listener.getLogger();               
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
         
         TestPlan plan = null;
         boolean success = true;
-        try {
-            checkGlobaConfiguration();
-            plan = (TestPlan)collectionStrategy.collect(listener, build);            
-            console.println(String.format( "Executing tests for %s testcases", plan.getAllTestCases().size() ));            
-            success = executeIterativeTest(build, listener, launcher, plan, preTestBuildSteps, postTestBuildSteps);
-
+        try {            
+            checkGlobaConfiguration();            
+            collectionStrategy.execute(build, listener, launcher, preTestBuildSteps, preTestBuildSteps, iterativeTestCaseBuilders);
         } catch (Exception ex) {
             success = false;
             console.println(String.format("Failed to retrieve relevant test data. Message was:%n%s", ex.getMessage()));
-   
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
         } finally {

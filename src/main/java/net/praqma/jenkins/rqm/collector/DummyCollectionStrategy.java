@@ -28,9 +28,10 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.RqmCollectorDescriptor;
-import net.praqma.jenkins.rqm.model.RQMObject;
+import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
@@ -91,7 +92,7 @@ public class DummyCollectionStrategy extends RqmCollector {
     }
 
     @Override
-    public <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
-        return (T)defaultTestPlan();
+    public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
+        return Arrays.asList((T)defaultTestPlan());
     }
 }

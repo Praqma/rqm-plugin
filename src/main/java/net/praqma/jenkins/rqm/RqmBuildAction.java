@@ -26,6 +26,7 @@ package net.praqma.jenkins.rqm;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import java.util.HashSet;
+import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 
@@ -37,15 +38,15 @@ public class RqmBuildAction implements Action {
     
     private final String NAME = "RQM Test Report";
     //The entire testplan
-    public final TestPlan testplan;
+    public final RqmObject topLevelObject;
     
     //Selected suites
     public final String testSuites; 
     public final AbstractBuild<?, ?> build;
     
-    public RqmBuildAction(final TestPlan testplan, final AbstractBuild<?, ?> build, final String testSuites) {
+    public RqmBuildAction(final RqmObject topLevelObject, final AbstractBuild<?, ?> build, final String testSuites) {
         this.build = build;
-        this.testplan = testplan;
+        this.topLevelObject = topLevelObject;
         this.testSuites = testSuites;
     }
 
@@ -65,7 +66,6 @@ public class RqmBuildAction implements Action {
     }
     
     public TestCase[] getSelectedTestCases() {
-        HashSet<TestCase> set = testplan.getAllTestCasesWithinSuites(testSuites);
-        return set.toArray(new TestCase[set.size()]);        
+        return null;
     }
 }

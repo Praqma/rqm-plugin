@@ -31,12 +31,13 @@ import hudson.model.BuildListener;
 import hudson.model.EnvironmentContributingAction;
 import hudson.tasks.BuildStep;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import net.praqma.jenkins.rqm.RqmBuilder;
 import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.RqmCollectorDescriptor;
 import net.praqma.jenkins.rqm.RqmObjectCreator;
-import net.praqma.jenkins.rqm.model.RQMObject;
+import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
@@ -71,7 +72,7 @@ public class RqmTestSuiteCollectionStrategy extends RqmCollector {
     }
 
     @Override
-    public  <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
+    public  <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
         TestPlan plan = new TestPlan(planName);
         String planRequestFeed = plan.getFeedUrlForTestPlans(getHostName(), getPort(), getContextRoot(), projectName);
 
@@ -81,16 +82,17 @@ public class RqmTestSuiteCollectionStrategy extends RqmCollector {
         listener.getLogger().println("Getting TestPlans using feed url:");
         listener.getLogger().println(planRequestFeed+"?fields="+requestParameters[0].getValue());
         
-        RqmObjectCreator<TestPlan> object = new RqmObjectCreator<TestPlan>(plan, list);
-        plan = build.getWorkspace().act(object);
-        return (T)plan;
+        RqmObjectCreator<TestPlan> object = new RqmObjectCreator<TestPlan>(TestPlan.class, list);
+        plan = build.getWorkspace().act(object).get(0);
+        
+        return Arrays.asList((T)plan);
     }
 
     @Override
     public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders) throws Exception {
         boolean success = true;
         
-        final TestPlan plan = collect(listener, build);
+        final TestPlan plan = (TestPlan)collect(listener, build).get(0);
         
         if(preBuildSteps != null) {
             listener.getLogger().println(String.format("Performing pre build step"));

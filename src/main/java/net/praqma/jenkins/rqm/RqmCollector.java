@@ -33,7 +33,7 @@ import hudson.tasks.BuildStep;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.model.Jenkins;
-import net.praqma.jenkins.rqm.model.RQMObject;
+import net.praqma.jenkins.rqm.model.RqmObject;
 
 /**
  * @author mads
@@ -65,7 +65,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
         return list;
     }
     
-    public abstract <T extends RQMObject> T collect(BuildListener listener, AbstractBuild<?,?> build) throws Exception;
+    public abstract <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?,?> build) throws Exception;
     public boolean execute(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders) throws Exception {
         return true;
     }
