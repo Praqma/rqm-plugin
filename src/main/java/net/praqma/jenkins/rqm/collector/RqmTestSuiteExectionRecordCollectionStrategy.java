@@ -30,6 +30,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.EnvironmentContributingAction;
+import hudson.model.Result;
 import hudson.tasks.BuildStep;
 import java.util.List;
 import java.util.logging.Logger;
@@ -104,7 +105,13 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
             listener.getLogger().println(String.format( "Test Suite Execution Record %s [%s]",rec.getTestSuiteExecutionRecordTitle(), rec.getRqmObjectResourceUrl()) );
             for(final TestCase tc : rec.getTestSuite().getTestcases()) {
                 listener.getLogger().println(String.format( " Test Case %s [%s]",tc.getTestCaseTitle(), tc.getRqmObjectResourceUrl()) );
-                for(final TestScript ts : tc.getScripts()) {
+                
+                if(tc.getScripts().isEmpty()) {
+                    listener.getLogger().println("Test case %s does not contain any scripts, setting result to unstable");
+                    build.setResult(Result.UNSTABLE);
+                }
+                
+                for(final TestScript ts : tc.getScripts()) {                    
                     listener.getLogger().println(String.format( "  Test Script %s [%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
                     for(BuildStep bstep : iterativeTestCaseBuilders) {
                         build.addAction(new EnvironmentContributingAction() {
