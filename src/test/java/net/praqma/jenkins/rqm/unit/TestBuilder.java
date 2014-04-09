@@ -45,8 +45,6 @@ public class TestBuilder extends RqmTestCase {
         
         RqmBuildAction action = build.getAction(RqmBuildAction.class);
         assertNotNull(action);
-
-        assertEquals(2, action.getSelectedTestCases().length);
         
         assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));
         

@@ -33,13 +33,13 @@ import hudson.model.EnvironmentContributingAction;
 import hudson.tasks.BuildStep;
 import java.util.List;
 import java.util.logging.Logger;
+import net.praqma.jenkins.rqm.RqmBuildAction;
 import net.praqma.jenkins.rqm.RqmBuilder;
 import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.RqmCollectorDescriptor;
 import net.praqma.jenkins.rqm.RqmObjectCreator;
 import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
-import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuiteExecutionRecord;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
@@ -79,8 +79,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     @Override
     public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
         NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(planName, getPort(), planName, executionRecordName);
-        String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);
-        
+        String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);        
         RqmParameterList list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), request, filterProperties, "GET", null);
         log.fine(list.toString());
         RqmObjectCreator<TestSuiteExecutionRecord> object = new RqmObjectCreator<TestSuiteExecutionRecord>(TestSuiteExecutionRecord.class, list);        
@@ -100,13 +99,13 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
         }
         
         for(final TestSuiteExecutionRecord rec : records) {
-            listener.getLogger().println(String.format( "Test Plan %s[%s]", rec.getTestPlan().getTestPlanTitle(), rec.getTestPlan().getRqmObjectResourceUrl() ));
-            listener.getLogger().println(String.format( "Test Suite %s[%s] ", rec.getTestSuite().getTestSuiteTitle(), rec.getTestSuite().getRqmObjectResourceUrl()  ));
-            listener.getLogger().println(String.format( "Test Suite Execution Record %s[%s]",rec.getTestSuiteExecutionRecordTitle(), rec.getRqmObjectResourceUrl()) );
+            listener.getLogger().println(String.format( "Test Plan %s [%s]", rec.getTestPlan().getTestPlanTitle(), rec.getTestPlan().getRqmObjectResourceUrl() ));
+            listener.getLogger().println(String.format( "Test Suite %s [%s] ", rec.getTestSuite().getTestSuiteTitle(), rec.getTestSuite().getRqmObjectResourceUrl()  ));
+            listener.getLogger().println(String.format( "Test Suite Execution Record %s [%s]",rec.getTestSuiteExecutionRecordTitle(), rec.getRqmObjectResourceUrl()) );
             for(final TestCase tc : rec.getTestSuite().getTestcases()) {
-                listener.getLogger().println(String.format( " Test Case %s[%s]",tc.getTestCaseTitle(), tc.getRqmObjectResourceUrl()) );
+                listener.getLogger().println(String.format( " Test Case %s [%s]",tc.getTestCaseTitle(), tc.getRqmObjectResourceUrl()) );
                 for(final TestScript ts : tc.getScripts()) {
-                    listener.getLogger().println(String.format( "  Test Script %s[%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
+                    listener.getLogger().println(String.format( "  Test Script %s [%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
                     for(BuildStep bstep : iterativeTestCaseBuilders) {
                         build.addAction(new EnvironmentContributingAction() {
                             @Override
@@ -146,6 +145,8 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                 success &= bs.perform(build, launcher, listener);
             }
         }
+        
+        build.addAction(new RqmBuildAction(records));
         
         return success;
     }

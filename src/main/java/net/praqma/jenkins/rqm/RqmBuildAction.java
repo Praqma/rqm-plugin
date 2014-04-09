@@ -25,10 +25,8 @@ package net.praqma.jenkins.rqm;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
-import java.util.HashSet;
+import java.util.List;
 import net.praqma.jenkins.rqm.model.RqmObject;
-import net.praqma.jenkins.rqm.model.TestCase;
-import net.praqma.jenkins.rqm.model.TestPlan;
 
 /**
  *
@@ -37,17 +35,11 @@ import net.praqma.jenkins.rqm.model.TestPlan;
 public class RqmBuildAction implements Action {
     
     private final String NAME = "RQM Test Report";
-    //The entire testplan
-    public final RqmObject topLevelObject;
+    //The top level RqmObject. Can be anything
+    public final List<? extends RqmObject> topLevelObjects;
     
-    //Selected suites
-    public final String testSuites; 
-    public final AbstractBuild<?, ?> build;
-    
-    public RqmBuildAction(final RqmObject topLevelObject, final AbstractBuild<?, ?> build, final String testSuites) {
-        this.build = build;
-        this.topLevelObject = topLevelObject;
-        this.testSuites = testSuites;
+    public RqmBuildAction(final List<? extends RqmObject> topLevelObjects) {
+        this.topLevelObjects = topLevelObjects;
     }
 
     @Override
@@ -63,9 +55,5 @@ public class RqmBuildAction implements Action {
     @Override
     public String getUrlName() {
         return NAME.replaceAll(" ", "");
-    }
-    
-    public TestCase[] getSelectedTestCases() {
-        return null;
     }
 }

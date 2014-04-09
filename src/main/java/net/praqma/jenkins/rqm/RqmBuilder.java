@@ -133,8 +133,6 @@ public class RqmBuilder extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream console = listener.getLogger();               
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
-        
-        TestPlan plan = null;
         boolean success = true;
         try {            
             checkGlobaConfiguration();            
@@ -148,8 +146,6 @@ public class RqmBuilder extends Builder {
             if(!success) {
                 console.println("Error caught in test execution, review log for details");
             }
-            RqmBuildAction action = new RqmBuildAction(plan, build, null);
-            build.getActions().add(action);
         }
  
         return success;
