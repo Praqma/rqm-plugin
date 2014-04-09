@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2013 Praqma.
+ * Copyright 2014 mads.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,40 +23,15 @@
  */
 package net.praqma.jenkins.rqm;
 
-import hudson.model.AbstractBuild;
-import hudson.model.Action;
-import net.praqma.jenkins.rqm.model.TestPlan;
+import hudson.model.Descriptor;
 
 /**
  *
- * @author Praqma
+ * @author mads
  */
-public class RQMBuildAction implements Action {
-    
-    private final String NAME = "RQM Test Report";
-    public final String customKey;
-    public final TestPlan testplan;
-    public final AbstractBuild<?, ?> build;
-    
-    public RQMBuildAction(final TestPlan testplan, final String customKey, final AbstractBuild<?, ?> build) {
-        this.build = build;
-        this.testplan = testplan;
-        this.customKey = customKey;
+public abstract class RqmCollectorDescriptor extends Descriptor<RqmCollector> {
+    protected RqmCollectorDescriptor() { }
+    protected RqmCollectorDescriptor(Class<? extends RqmCollector> clazz) {
+        super(clazz);
     }
-
-    @Override
-    public String getIconFileName() {
-        return "/plugin/rqm-plugin/images/64x64/rqm-icon.png";        
-    }
-
-    @Override
-    public String getDisplayName() {
-        return NAME;
-    }
-
-    @Override
-    public String getUrlName() {
-        return NAME;
-    }
-    
 }

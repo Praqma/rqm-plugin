@@ -21,28 +21,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.praqma.jenkins.rqm.unit;
+package net.praqma.jenkins.rqm;
+
+import hudson.model.AbstractBuild;
+import hudson.model.Action;
+import java.util.HashSet;
+import net.praqma.jenkins.rqm.model.RqmObject;
+import net.praqma.jenkins.rqm.model.TestCase;
+import net.praqma.jenkins.rqm.model.TestPlan;
 
 /**
  *
  * @author Praqma
  */
-
-import net.praqma.jenkins.rqm.RQMBuildAction;
-import net.praqma.jenkins.rqm.model.TestPlan;
-import static org.junit.Assert.*;
-import org.junit.Rule;
-import org.junit.Test;
-
-public class SimpleModelTest {
+public class RqmBuildAction implements Action {
     
-    @Rule
-    public RqmUnitTestRule rule1 =  new RqmUnitTestRule();    
+    private final String NAME = "RQM Test Report";
+    //The entire testplan
+    public final RqmObject topLevelObject;
     
-    @Test
-    public void modelTest() {
-        TestPlan plan = new TestPlan();
-        RQMBuildAction action = new RQMBuildAction(plan, "myKey", null);
-        assertEquals(action.getDisplayName(),"RQM Test Report");                
+    //Selected suites
+    public final String testSuites; 
+    public final AbstractBuild<?, ?> build;
+    
+    public RqmBuildAction(final RqmObject topLevelObject, final AbstractBuild<?, ?> build, final String testSuites) {
+        this.build = build;
+        this.topLevelObject = topLevelObject;
+        this.testSuites = testSuites;
+    }
+
+    @Override
+    public String getIconFileName() {
+        return "/plugin/rqm-plugin/images/64x64/rqm-icon.png";        
+    }
+
+    @Override
+    public String getDisplayName() {
+        return NAME;
+    }
+
+    @Override
+    public String getUrlName() {
+        return NAME.replaceAll(" ", "");
+    }
+    
+    public TestCase[] getSelectedTestCases() {
+        return null;
     }
 }

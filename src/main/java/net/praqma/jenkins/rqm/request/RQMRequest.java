@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2013 mads.
+ * Copyright 2013 Praqma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,14 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package net.praqma.jenkins.rqm.unit;
+package net.praqma.jenkins.rqm.request;
 
-import org.jvnet.hudson.test.JenkinsRule;
+import net.praqma.jenkins.rqm.model.exception.LoginException;
+import net.praqma.jenkins.rqm.model.exception.RequestException;
+import net.praqma.util.structure.Tuple;
 
 /**
  *
- * @author mads
+ * @author Praqma
  */
-public class RqmUnitTestRule extends JenkinsRule {
-    
+public interface RQMRequest {
+    public Tuple<Integer,String> executeRequest() throws LoginException, RequestException;
 }

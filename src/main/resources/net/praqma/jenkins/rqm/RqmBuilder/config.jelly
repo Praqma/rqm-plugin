@@ -1,18 +1,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    
-    <f:entry field="projectName" title="${%Project name}">
-       <f:textbox/>
-    </f:entry>
-    
-    <f:entry field="planName" title="${%Test plan name}">
-        <f:textbox/>
-    </f:entry>
 
-    <f:entry field="suiteNames" title="${%Test suites}">
-        <f:textbox/>
-    </f:entry>
-
+    <f:dropdownDescriptorSelector descriptors="${descriptor.getCollectionStrategies()}" field="collectionStrategy" title="${%Testcase selection strategy}"/>
+    
     <f:entry field="preBuildSteps" title="${%Pre Build Steps}">
         <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.preBuildSteps}" addCaption="Add pre build step" hasHeader="true"/>
     </f:entry>
@@ -21,7 +11,7 @@
         <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.postBuildSteps}" addCaption="Add post build step" hasHeader="true"/>
     </f:entry>
 
-    <f:entry title="${%Per Test Case Builder}" help="nohelp">
+    <f:entry title="${%Per Test Case Builder}" field="iterativeTestCaseBuilders">
       <f:hetero-list name="iterativeTestCaseBuilders" targetType="${descriptor.rqmBuilderType}"
            descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.iterativeTestCaseBuilders}"
            addCaption="Add action" hasHeader="true"/>
