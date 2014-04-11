@@ -24,22 +24,68 @@
 package net.praqma.jenkins.rqm.unit;
 
 import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.tasks.BatchFile;
+import hudson.tasks.BuildStep;
+import hudson.tasks.Shell;
+import java.util.Arrays;
 import net.praqma.jenkins.rqm.RqmBuildAction;
+import net.praqma.jenkins.rqm.RqmBuilder;
+import net.praqma.jenkins.rqm.RqmCollector;
+import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
+import org.apache.commons.lang.SystemUtils;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.mockito.Mockito;
 
 /**
  *
  * @author mads
  */
 public class TestBuilder extends RqmTestCase {
+    
+    
+    private RqmBuilder createBuilder(boolean shouldFail) {
+        RqmBuilder builder = null;
+        RqmCollector collector = new DummyCollectionStrategy(shouldFail);
+        if(!shouldFail) {
+            if(SystemUtils.IS_OS_WINDOWS) {        
+                final BuildStep f = new BatchFile("dir");                      
+                final BuildStep f2 = new BatchFile("dir");            
+                builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
+
+            } else {
+                final BuildStep s = new Shell("ls");
+                final BuildStep s2 = new Shell("ls");
+                builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
+            }
+        } else {
+            if(SystemUtils.IS_OS_WINDOWS) {        
+                final BuildStep f = new BatchFile("dir");                      
+                final BuildStep f2 = new BatchFile("exit 1");            
+                builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
+
+            } else {
+                final BuildStep s = new Shell("ls");
+                final BuildStep s2 = new Shell("exit 1");
+                builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
+            }
+        }
+        return builder;
+    }
+            
         
     @Test
     public void buildSuccess() throws Exception {
-        FreeStyleProject proj = createSuccesConfiguration();
+        RqmBuilder builder = createBuilder(false);        
+        RqmBuilder spy = Mockito.spy(builder);
+        
+        //Mock the configuration 
+        Mockito.doReturn(true).when(spy).checkGlobaConfiguration();        
+        FreeStyleProject proj = createSuccesConfiguration(spy);
         
         AbstractBuild<?,?> build = proj.scheduleBuild2(0).get();
         
@@ -56,13 +102,15 @@ public class TestBuilder extends RqmTestCase {
      */
     @Test
     public void buildFailure() throws Exception {
-        FreeStyleProject proj = creteFailingConfiguartion();
-        final FreeStyleBuild builres = proj.scheduleBuild2(0).get();
+        RqmBuilder builder = createBuilder(true);
         
-        String consoleMessage = jenkins.createWebClient().getPage(builres, "console").asText();
+        RqmBuilder spy = Mockito.spy(builder);
+        //Mock the configuration 
+        Mockito.doReturn(true).when(spy).checkGlobaConfiguration();
         
-        assertTrue(consoleMessage, consoleMessage.contains("Error caught in test execution, review log for details"));
-        assertTrue(consoleMessage, consoleMessage.contains("Executing test case TestCase2"));
+        FreeStyleProject proj = createFailingConfiguartion(spy);
+
+        final FreeStyleBuild builres = proj.scheduleBuild2(0).get();        
         
         assertTrue(builres.getResult().isWorseThan(Result.SUCCESS));
     }

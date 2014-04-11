@@ -88,9 +88,9 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     }
 
     @Override
-    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders) throws Exception {
+    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
         boolean success = true;
-        List<TestSuiteExecutionRecord> records = collect(listener, build);
+        List<TestSuiteExecutionRecord> records = (List<TestSuiteExecutionRecord>)results;
         
         if(preBuildSteps != null) {
             listener.getLogger().println(String.format("Performing pre build step"));
@@ -153,7 +153,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
             }
         }
         
-        build.addAction(new RqmBuildAction(records));
+        //build.addAction(new RqmBuildAction(records));
         
         return success;
     }

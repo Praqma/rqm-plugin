@@ -89,10 +89,10 @@ public class RqmTestSuiteCollectionStrategy extends RqmCollector {
     }
 
     @Override
-    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders) throws Exception {
+    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
         boolean success = true;
         
-        final TestPlan plan = (TestPlan)collect(listener, build).get(0);
+        final TestPlan plan = (TestPlan)results.get(0);
         
         if(preBuildSteps != null) {
             listener.getLogger().println(String.format("Performing pre build step"));

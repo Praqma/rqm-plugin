@@ -24,8 +24,10 @@
 package net.praqma.jenkins.rqm.collector;
 
 import hudson.Extension;
+import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.tasks.BuildStep;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -45,8 +47,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
  */
 public class DummyCollectionStrategy extends RqmCollector {
 
+    public boolean alwaysFail = false;
+    
     @DataBoundConstructor
     public DummyCollectionStrategy() { }
+    
+    public DummyCollectionStrategy(boolean alwaysFail) {
+        this.alwaysFail = alwaysFail;
+    }
     
     @Extension
     public static class DummyCollectionStrategyImpl extends RqmCollectorDescriptor {
@@ -95,4 +103,11 @@ public class DummyCollectionStrategy extends RqmCollector {
     public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
         return Arrays.asList((T)defaultTestPlan());
     }
+
+    @Override
+    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
+        return !alwaysFail; 
+    }
+    
+    
 }

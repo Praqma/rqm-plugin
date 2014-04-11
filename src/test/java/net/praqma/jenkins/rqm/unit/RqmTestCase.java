@@ -40,6 +40,7 @@ import net.praqma.jenkins.rqm.model.TestSuite;
 import org.apache.commons.lang.SystemUtils;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
 /**
  *
  * @author mads
@@ -71,23 +72,8 @@ public class RqmTestCase {
         return plan;
     }
     
-    public FreeStyleProject createSuccesConfiguration() throws Exception {
+    public FreeStyleProject createSuccesConfiguration(RqmBuilder builder) throws Exception {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
-
-        RqmBuilder builder = null;
-        RqmCollector collector = new DummyCollectionStrategy();
-      
-        if(SystemUtils.IS_OS_WINDOWS) {        
-            final BuildStep f = new BatchFile("dir");                      
-            final BuildStep f2 = new BatchFile("dir");            
-            builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
-            
-        } else {
-            final BuildStep s = new Shell("ls");
-            final BuildStep s2 = new Shell("ls");
-            builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
-        }
-         
         
         List<Builder> blold = proj.getBuildersList().toList();
         
@@ -99,21 +85,8 @@ public class RqmTestCase {
         
     }
     
-    public FreeStyleProject creteFailingConfiguartion() throws Exception {
+    public FreeStyleProject createFailingConfiguartion(RqmBuilder builder) throws Exception {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
-        RqmCollector collector = new DummyCollectionStrategy();
-        RqmBuilder builder = null;
-      
-        if(SystemUtils.IS_OS_WINDOWS) {        
-            final BuildStep f = new BatchFile("dir");                      
-            final BuildStep f2 = new BatchFile("exit 1");            
-            builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );            
-        } else {
-            final BuildStep s = new Shell("ls");
-            final BuildStep s2 = new Shell("exit 1");
-            builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
-        }
-        
         
         List<Builder> blold = proj.getBuildersList().toList();        
         proj.getBuildersList().clear();

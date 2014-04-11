@@ -66,7 +66,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
     }
     
     public abstract <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?,?> build) throws Exception;
-    public boolean execute(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders) throws Exception {
+    public boolean execute(AbstractBuild<?,?> build, BuildListener listener, Launcher launcher, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
         return true;
     }
     

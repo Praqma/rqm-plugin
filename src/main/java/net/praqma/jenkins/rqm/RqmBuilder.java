@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
+import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -133,16 +134,21 @@ public class RqmBuilder extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream console = listener.getLogger();               
         console.println(Jenkins.getInstance().getPlugin("rqm-plugin").getWrapper().getVersion());
+        
         boolean success = true;
+        List<? extends RqmObject> results = null;
         try {            
-            checkGlobaConfiguration();            
-            collectionStrategy.execute(build, listener, launcher, preTestBuildSteps, preTestBuildSteps, iterativeTestCaseBuilders);
+            checkGlobaConfiguration();
+            results = collectionStrategy.collect(listener, build);            
+            success = collectionStrategy.execute(build, listener, launcher, preTestBuildSteps, preTestBuildSteps, iterativeTestCaseBuilders, results);
+            
         } catch (Exception ex) {
             success = false;
             console.println(String.format("Failed to retrieve relevant test data. Message was:%n%s", ex.getMessage()));
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
         } finally {
+            build.addAction(new RqmBuildAction(results));
             if(!success) {
                 console.println("Error caught in test execution, review log for details");
             }
