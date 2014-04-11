@@ -28,14 +28,7 @@ import org.xml.sax.SAXException;
  * @author Praqma
  */
 public abstract class RqmObject<T> implements Serializable {
-    /**
-     * The external id's we assign to resource created during jenkins execution
-     * 
-     * TCER: Test Case Execution Record
-     * TER: Test Execution Result
-     */
-    public static final Pattern JENKINS_TCER_RESOURCE_ID_PATTERN = Pattern.compile("jenkins:tcer:\\d+");
-    public static final Pattern JENKINS_TER_RESOURCE_ID_PATTERN = Pattern.compile("jenkins:ter:\\d+");
+
     private final static Logger log = Logger.getLogger(RqmObject.class.getName());
     protected String rqmObjectResourceUrl;
    
