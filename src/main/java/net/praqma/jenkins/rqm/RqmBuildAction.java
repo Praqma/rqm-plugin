@@ -25,11 +25,13 @@ package net.praqma.jenkins.rqm;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
+import net.praqma.jenkins.rqm.model.TopLevelObject;
 
 /**
  *
@@ -62,6 +64,12 @@ public class RqmBuildAction implements Action {
     
     //TODO: Implement me
     public List<TestCase> getSelectedTestCases() {
-        return Collections.EMPTY_LIST;
+        List<TestCase> testcases = new ArrayList<TestCase>();
+        for(RqmObject obj : topLevelObjects) {
+            if(obj instanceof TopLevelObject) {
+                testcases.addAll(((TopLevelObject)obj).getAllTestCases());
+            }
+        }
+        return testcases;
     }
 }

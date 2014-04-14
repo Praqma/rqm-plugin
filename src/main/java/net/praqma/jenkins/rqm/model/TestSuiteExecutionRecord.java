@@ -11,7 +11,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
@@ -33,7 +35,7 @@ import org.w3c.dom.NodeList;
  *
  * @author Mads
  */
-public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord> {    
+public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord> implements TopLevelObject {    
     private final static String RESOURCE_RQM_NAME = "suiteexecutionrecord";
     private static final Logger log = Logger.getLogger(TestSuiteExecutionRecord.class.getName());
     
@@ -85,7 +87,7 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
                 if(nl.getNodeType() == Node.ELEMENT_NODE) {
                     Element suiteElement = (Element)nl;
                     String testSuiteExecutionRecordHref = suiteElement.getElementsByTagName("ns6:identifier").item(0).getTextContent();
-                    String testSuiteExecutionRecordTitle = suiteElement.getElementsByTagName("ns6:title").item(0).getTextContent();
+                    String tserTitle = suiteElement.getElementsByTagName("ns6:title").item(0).getTextContent();
                     String testPlanHref = ((Element)suiteElement.getElementsByTagName("ns4:testplan").item(0)).getAttribute("href");
                     String testSuiteHref = ((Element)suiteElement.getElementsByTagName("ns4:testsuite").item(0)).getAttribute("href");                    
                     /**
@@ -94,7 +96,7 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
                     record.setRqmObjectResourceUrl(testSuiteExecutionRecordHref);
                     record.setTestSuite(new TestSuite(testSuiteHref).read(parameters).get(0));
                     record.setTestPlan(new TestPlan(testPlanHref).read(parameters).get(0));
-                    record.setTestSuiteExecutionRecordTitle(testSuiteExecutionRecordTitle);
+                    record.setTestSuiteExecutionRecordTitle(tserTitle);
                 }
                 tsers.add(record);
             }
@@ -157,5 +159,12 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
      */
     public void setTestSuiteExecutionRecordTitle(String testSuiteExecutionRecordTitle) {
         this.testSuiteExecutionRecordTitle = testSuiteExecutionRecordTitle;
+    }
+
+    @Override
+    public Set<TestCase> getAllTestCases() {
+        HashSet<TestCase> testCases = new HashSet<TestCase>();
+        testCases.addAll(getTestSuite().getTestcases());
+        return testCases;
     }
 }
