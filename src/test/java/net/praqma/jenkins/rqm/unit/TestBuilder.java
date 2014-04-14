@@ -24,7 +24,6 @@
 package net.praqma.jenkins.rqm.unit;
 
 import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -46,7 +45,6 @@ import org.mockito.Mockito;
  * @author mads
  */
 public class TestBuilder extends RqmTestCase {
-    
     
     private RqmBuilder createBuilder(boolean shouldFail) {
         RqmBuilder builder = null;
