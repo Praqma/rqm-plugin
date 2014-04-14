@@ -13,7 +13,7 @@ public class LoginException extends Exception {
     public final String password;
     
     public LoginException(String user, String password, Throwable cause) {
-        super(String.format("Login failed for user %s using password %s",user,password),cause);
+        super(String.format("Login failed for user %s using password %s", user, password), cause);
         this.user = user;
         this.password = password;
     }

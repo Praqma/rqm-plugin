@@ -42,6 +42,7 @@ public class RQMUtilities {
      * @param qmServerURL
      * @param projectAlias
      * @param resourceType
+     * @throws UnsupportedEncodingException
      * @return 
      */
     public static String getSingleResourceBaseUrl(String qmServerURL, String projectAlias, String resourceType) throws UnsupportedEncodingException {

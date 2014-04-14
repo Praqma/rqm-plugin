@@ -85,12 +85,12 @@ public class TestCase extends RqmObject<TestCase> {
             log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught login exception in invoke");
             throw new IOException("RqmMethodInvoker exception(LoginException)",loginex);
         } catch (RequestException reqExeception) {
-            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught RequestException in invoke");
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught RequestException in invoke");           
             throw new IOException("RqmMethodInvoker exception(RequestException)",reqExeception);
-        } catch (Exception ex) {
-            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught Exception in invoke");
-            throw new IOException("RqmMethodInvoker exception(Exception)", ex);
-        }
+        } catch (RQMObjectParseException parseError) {
+            log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught RequestException in invoke");           
+            throw new IOException("RqmMethodInvoker exception(RQMObjectParseException)", parseError);
+        } 
     }
     
     @Override
