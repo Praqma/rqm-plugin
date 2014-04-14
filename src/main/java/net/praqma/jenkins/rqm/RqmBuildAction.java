@@ -25,8 +25,11 @@ package net.praqma.jenkins.rqm;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import net.praqma.jenkins.rqm.model.RqmObject;
+import net.praqma.jenkins.rqm.model.TestCase;
 
 /**
  *
@@ -55,5 +58,10 @@ public class RqmBuildAction implements Action {
     @Override
     public String getUrlName() {
         return NAME.replaceAll(" ", "");
+    }
+    
+    //TODO: Implement me
+    public List<TestCase> getSelectedTestCases() {
+        return Collections.EMPTY_LIST;
     }
 }
