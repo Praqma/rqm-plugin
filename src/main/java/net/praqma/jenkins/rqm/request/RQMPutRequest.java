@@ -7,6 +7,7 @@ package net.praqma.jenkins.rqm.request;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -37,11 +38,12 @@ public class RQMPutRequest implements RQMRequest {
         this.requestContent = requestContent;
     }
     
+    @Override
     public Tuple<Integer, String> executeRequest() throws LoginException, RequestException {
         Tuple<Integer,String> result = new Tuple<Integer, String>();
         try {
             client.login();
-            BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(requestContent.getBytes()));
+            BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(requestContent.getBytes(Charset.forName("utf8"))));
             method.setRequestEntity( new InputStreamRequestEntity(bis, "application/xml"));
             
 

@@ -5,6 +5,7 @@
 package net.praqma.jenkins.rqm.request;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
 import org.apache.commons.httpclient.NameValuePair;
 
@@ -47,7 +48,7 @@ public class RqmParameterList implements Serializable {
         builder.append(fillParameter("Password", passwd));
         builder.append(fillParameter("Context", contextRoot));
         builder.append(fillParameter("RequestString", requestString));
-        builder.append(fillParameter("ParameterList", parameterList.toString()));
+        builder.append(fillParameter("ParameterList", Arrays.toString(parameterList)));
         builder.append(fillParameter("MethodType", methodType));
         builder.append(fillParameter("RequestContent", requestContent));
         return builder.toString();

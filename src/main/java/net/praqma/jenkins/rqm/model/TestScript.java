@@ -35,25 +35,10 @@ public class TestScript extends RqmObject<TestScript> {
 
     private final static String RESOURCE_RQM_MANUAL_NAME = "testscript";
     private final static String RESOURCE_RQM_NONMANUAL_NAME = "remotescript";    
-    private static final Logger log = Logger.getLogger(TestScript.class.getName());    
-    private Date lastRunDate = new Date();
+    private static final Logger log = Logger.getLogger(TestScript.class.getName());       
     private String scriptTitle = "No scipt type defined";
     private boolean manual = false;
     public HashMap<String,String> customAttributes = new HashMap<String, String>();
-    
-    /**
-     * @return the lastRunDate
-     */
-    public Date getLastRunDate() {
-        return lastRunDate;
-    }
-
-    /**
-     * @param lastRunDate the lastRunDate to set
-     */
-    public void setLastRunDate(Date lastRunDate) {
-        this.lastRunDate = lastRunDate;
-    }
     
     public boolean isManual() {
         return this.manual;

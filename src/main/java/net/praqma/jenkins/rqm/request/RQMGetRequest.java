@@ -26,6 +26,7 @@ package net.praqma.jenkins.rqm.request;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.logging.Logger;
 import javax.xml.ws.http.HTTPException;
@@ -78,7 +79,7 @@ public class RQMGetRequest implements RQMRequest {
                 throw new LoginException(client.getUsr(), client.getPassword(), ex);
             }
             int response = client.executeMethod(method);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(method.getResponseBodyAsStream()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(method.getResponseBodyAsStream(), Charset.forName("utf8")));
             StringBuilder builder = new StringBuilder();
             String line;
             while((line = reader.readLine()) != null)  {

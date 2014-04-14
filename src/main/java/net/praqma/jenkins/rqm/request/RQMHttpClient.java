@@ -31,6 +31,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
 import org.apache.commons.httpclient.Header;
@@ -45,6 +46,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.protocol.Protocol;
+import org.apache.log4j.lf5.LogLevel;
 
 /**
  *
@@ -138,9 +140,9 @@ public class RQMHttpClient extends HttpClient {
                 try {
                     body = authenticationMethod.getResponseBodyAsString();
                 } catch (Exception e) {
-                    log.severe(String.format("Failed to login, with response code %s \n Response body: \n %s", response, body));
+                    log.severe(String.format("Failed to login, with response code %s %n Response body: %n %s", response, body));
                 }
-                log.severe(String.format("Failed to login, with response code %s \n Response body: \n %s", response, body));
+                log.severe(String.format("Failed to login, with response code %s %n Response body: %n %s", response, body));
             }
         } else {
             followRedirects(authenticationMethod, response);
@@ -180,8 +182,9 @@ public class RQMHttpClient extends HttpClient {
             body = authenticationMethod.getResponseBodyAsString();
             status = authenticationMethod.getStatusText();
             log.finest(String.format("Response code %s, Status text %s", responseCode, status));
-        } catch (Exception e) {
-            log.finest("Failed to log out!: " + e.getMessage());
+        } catch (Exception e) {            
+            log.log(Level.SEVERE, "Failed to log out!",e);
+            log.log(Level.SEVERE, body);
         }
         return responseCode;
     }

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
@@ -42,7 +43,7 @@ public abstract class RqmObject<T> implements Serializable {
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();       
             DocumentBuilder builder = dbFactory.newDocumentBuilder();
-            is = new BufferedInputStream(new ByteArrayInputStream(xml.getBytes()));
+            is = new BufferedInputStream(new ByteArrayInputStream(xml.getBytes(Charset.forName("utf8"))));
             doc = builder.parse(is);
             doc.normalize();
             is.close();
@@ -140,19 +141,19 @@ public abstract class RqmObject<T> implements Serializable {
     
     public static String getDescriptor(RqmObject obj) {
         try {
-            return String.format("[%s] %s\n", obj.getClass().getSimpleName(), obj.getRqmObjectResourceUrl().split("urn:")[1]);
+            return String.format("[%s] %s%n", obj.getClass().getSimpleName(), obj.getRqmObjectResourceUrl().split("urn:")[1]);
         } catch (Exception ex) {
-            log.fine( String.format("The descriptor does not contain an internal url reference\n The resource url is: %s",obj.getRqmObjectResourceUrl()) );
-            return String.format("[%s] %s\n", obj.getClass().getSimpleName(), obj.getRqmObjectResourceUrl());
+            log.fine( String.format("The descriptor does not contain an internal url reference%n The resource url is: %s",obj.getRqmObjectResourceUrl()) );
+            return String.format("[%s] %s%n", obj.getClass().getSimpleName(), obj.getRqmObjectResourceUrl());
         }
     }
     
     public static String getDescriptor(RqmObject obj, String title) {
         try {
-            return String.format("[%s] %s (%s)\n", obj.getClass().getSimpleName(), title, obj.getRqmObjectResourceUrl().split("urn:")[1]);
+            return String.format("[%s] %s (%s)%n", obj.getClass().getSimpleName(), title, obj.getRqmObjectResourceUrl().split("urn:")[1]);
         } catch (Exception ex) {
-            log.fine( String.format("The descriptor does not contain an internal url reference\n The resource url is: %s",obj.getRqmObjectResourceUrl()) );
-            return String.format("[%s] %s\n", obj.getClass().getSimpleName(), title);
+            log.fine( String.format("The descriptor does not contain an internal url reference%n The resource url is: %s",obj.getRqmObjectResourceUrl()) );
+            return String.format("[%s] %s%n", obj.getClass().getSimpleName(), title);
         }
     }
 
