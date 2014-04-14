@@ -144,24 +144,9 @@ public class TestCase extends RqmObject<TestCase> {
                 getScripts().add(ts);
             }
         }
-        return this;
-                        
+        return this;                       
     }
-    
-    /**
-     * A test to see if the scripts associated with this test case has a custom attribute with a specific name. The search is case sensitive
-     * @param name
-     * @return 
-     */
-    public boolean hasScriptWithCustomField(String name) {
-        for (TestScript ts : getScripts()) {
-            if(ts.customAttributes.containsKey(name) && (ts.customAttributes.get(name) != null && !ts.customAttributes.get(name).equals("") )) {
-                return true;
-            }
-        }
-        return false;
-    }
- 
+
     @Override
     public String toString() {
         
@@ -184,28 +169,6 @@ public class TestCase extends RqmObject<TestCase> {
         return RqmObject.getDescriptor(this, getTestCaseTitle());
     }
     
-    /**
-     * @return the number of scripts assigned to this test case 
-     */
-    public int getTotalCount() {
-        return getScripts().size();                
-    }
-    
-    /*
-     * Each test case has one unique test case execution record (re-using it)
-     */
-    public String getExternalAssignedTestCaseExecutonRecordId() throws RQMObjectParseException {
-        return String.format("jenkins.tcer.%s", getInternalId());
-    }
-    
-    /*
-     * Each test case has one unique test case result (re-using it). Since we want to run this fairly often better re-use it
-     * and have jenkins maintain the grand-overview-
-     */
-    public String getExternalAssignedTestCaseResultId() throws RQMObjectParseException {
-        return String.format("jenkins.ter.%s", getInternalId());
-    }
-
     @Override
     public boolean equals(Object obj) {
         if(obj == null || !(obj instanceof TestCase)){
