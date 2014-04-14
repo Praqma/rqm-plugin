@@ -79,8 +79,7 @@ public class TestCase extends RqmObject<TestCase> {
         
         try {
             Tuple<Integer,String> res = new RQMGetRequest(client, getRqmObjectResourceUrl(), parameters.parameterList).executeRequest();
-            return Arrays.asList(initializeSingleResource(res.t2));                            
- 
+            return Arrays.asList(initializeSingleResource(res.t2));                             
         } catch (LoginException loginex) {
             log.logp(Level.SEVERE, this.getClass().getName(), "invoke", "Caught login exception in invoke");
             throw new IOException("RqmMethodInvoker exception(LoginException)",loginex);

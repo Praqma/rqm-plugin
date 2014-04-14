@@ -26,6 +26,7 @@ import net.praqma.jenkins.rqm.request.RQMUtilities;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
 import net.praqma.util.structure.Tuple;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -55,7 +56,22 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
     }
     
     public static NameValuePair[] getFilteringProperties(String host, int port, String context, String choseSuites) {
-        NameValuePair nvp = new NameValuePair("fields", String.format("feed/entry/content/suiteexecutionrecord[title='%s']/*", choseSuites));              
+        
+        String[] choices = choseSuites.split(",");
+        String joined = "";
+        
+        for (String choice : choices) {
+            if(!StringUtils.isBlank(choice)) { 
+                joined += String.format(" or title='%s'", choice);
+            }
+        }
+        joined = joined.substring(4, joined.length());
+        
+        
+        String selectionString = choseSuites.length() == 1 ? String.format("title='%s'", choices[0]) : joined;
+        
+        
+        NameValuePair nvp = new NameValuePair("fields", String.format("feed/entry/content/suiteexecutionrecord[%s]/*", selectionString));              
         return new NameValuePair[] { nvp };
     }
 
