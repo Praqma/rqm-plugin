@@ -23,11 +23,8 @@
  */
 package net.praqma.jenkins.rqm;
 
-import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
