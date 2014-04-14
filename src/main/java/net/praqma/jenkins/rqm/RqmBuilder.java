@@ -38,6 +38,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -125,8 +126,8 @@ public class RqmBuilder extends Builder {
      * @param values 
      */
     public static void addToEnvironment(EnvVars env, HashMap<String,String> values) {
-        for (String key : values.keySet()) {
-            env.put(key.toUpperCase(), values.get(key).replace(" ", "_"));
+        for (Entry<String, String> entry : values.entrySet()) {
+            env.put(entry.getKey().toUpperCase(), entry.getValue().replace(" ", "_"));
         }
     }
 

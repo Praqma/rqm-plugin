@@ -39,7 +39,7 @@ import net.praqma.jenkins.rqm.model.TopLevelObject;
  */
 public class RqmBuildAction implements Action {
     
-    private final String NAME = "RQM Test Report";
+    private final static String NAME = "RQM Test Report";
     //The top level RqmObject. Can be anything
     public final List<? extends RqmObject> topLevelObjects;
     

@@ -49,8 +49,6 @@ public class TestSuiteExecutionRecordTests {
         String suiteSingle = "mysuite1";        
         NameValuePair[] actual3 = TestSuiteExecutionRecord.getFilteringProperties("myshost", 9090, "qm", suiteSingle);
         NameValuePair[] expected3 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*") };
-        assertArrayEquals(expected3, actual3);  
-
-        
+        assertArrayEquals(expected3, actual3);          
     }
 }

@@ -156,7 +156,7 @@ public class TestCase extends RqmObject<TestCase> {
             
             for(TestScript s : getScripts()) {
                 if(!s.customAttributes.isEmpty()) {
-                    builder.append(String.format("Test Scripts with custom fields present:\n")); 
+                    builder.append(String.format("Test Scripts with custom fields present:%n")); 
                     builder.append(s);
                 }
             }
