@@ -34,7 +34,6 @@ import hudson.model.Result;
 import hudson.tasks.BuildStep;
 import java.util.List;
 import java.util.logging.Logger;
-import net.praqma.jenkins.rqm.RqmBuildAction;
 import net.praqma.jenkins.rqm.RqmBuilder;
 import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.RqmCollectorDescriptor;
@@ -99,8 +98,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
             }
         }
         
-        for(final TestSuiteExecutionRecord rec : records) {
-            listener.getLogger().println(String.format( "Test Plan %s [%s]", rec.getTestPlan().getTestPlanTitle(), rec.getTestPlan().getRqmObjectResourceUrl() ));
+        for(final TestSuiteExecutionRecord rec : records) {            
             listener.getLogger().println(String.format( "Test Suite %s [%s] ", rec.getTestSuite().getTestSuiteTitle(), rec.getTestSuite().getRqmObjectResourceUrl()  ));
             listener.getLogger().println(String.format( "Test Suite Execution Record %s [%s]",rec.getTestSuiteExecutionRecordTitle(), rec.getRqmObjectResourceUrl()) );
             for(final TestCase tc : rec.getTestSuite().getTestcases()) {
@@ -112,7 +110,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                 }
                 
                 for(final TestScript ts : tc.getScripts()) {                    
-                    listener.getLogger().println(String.format( "  Test Script %s [%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
+                    listener.getLogger().println(String.format( " * Test Script %s [%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
                     for(BuildStep bstep : iterativeTestCaseBuilders) {
                         build.addAction(new EnvironmentContributingAction() {
                             @Override
@@ -138,8 +136,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                                 return null;
                             }
                         });
-                        
-                        listener.getLogger().println(String.format( "Executing test case %s", tc.getTestCaseTitle() ) );     
+                           
                         success &= bstep.perform(build, launcher, listener);
                     }                    
                 }

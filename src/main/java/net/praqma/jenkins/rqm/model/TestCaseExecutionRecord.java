@@ -14,11 +14,10 @@ import net.praqma.jenkins.rqm.request.RqmParameterList;
 /**
  * @author Praqma
  */
-public class TestCaseExecutionRecord extends RqmObject<TestCaseExecutionRecord> {
+public class TestCaseExecutionRecord extends RqmObject<TestCaseExecutionRecord> {    
     
     private static final Logger log = Logger.getLogger(TestCaseExecutionRecord.class.getName());
-    private final static String RESOURCE_RQM_NAME = "executionworkitem";
-    
+    private final static String RESOURCE_RQM_NAME = "executionworkitem";    
     private TestCase testCase;
     private String testCaseExecutionRecordTitle;
         

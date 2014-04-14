@@ -129,6 +129,8 @@ public class TestPlan extends RqmObject<TestPlan> {
      * @param host
      * @param port
      * @param context
+     * @param project
+     * @throws UnsupportedEncodingException
      * @return 
      */
     public String getFeedUrlForTestPlans(String host, int port, String context, String project) throws UnsupportedEncodingException {
@@ -147,8 +149,8 @@ public class TestPlan extends RqmObject<TestPlan> {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(RqmObject.getDescriptor(this, getTestPlanTitle()));        
-        builder.append(String.format(" %s testsuite(s)\n %s testcase(s)",getTestSuites().size(),getTestCases().size()));        
-        builder.append("===Contents===\n");
+        builder.append(String.format(" %s testsuite(s)%n %s testcase(s)",getTestSuites().size(),getTestCases().size()));        
+        builder.append("===Contents===%n");
         for(TestSuite suite : getTestSuites()) {
             builder.append(suite);
         }
@@ -197,91 +199,6 @@ public class TestPlan extends RqmObject<TestPlan> {
      */
     public void setTestPlanTitle(String testPlanTitle) {
         this.testPlanTitle = testPlanTitle;
-    }
-    
-    public HashSet<TestSuite> getSuitesWithNames(String names) {
-        HashSet<TestSuite> suites = new HashSet<TestSuite>();
-        if(names.contains(",")) {
-            for(String suiteName : names.split(",")) {
-                for(TestSuite suite : getTestSuites()) {
-                    if(suite.getTestSuiteTitle().equals(StringUtils.trim(suiteName))) {
-                        suites.add(suite);
-                    }
-                }
-            }
-        } else {
-            for(TestSuite suite : getTestSuites()) {
-                if(suite.getTestSuiteTitle().equals(StringUtils.trim(names))) {
-                    suites.add(suite);
-                }
-            }
-        } 
-            
-        return suites;
-    }
-    
-    public HashSet<TestCase> getAllTestCasesWithinSuites(String suites) {
-        if(StringUtils.isBlank(suites)) {
-            return getAllTestCases();
-        }
-        
-        HashSet<TestCase> tcs = new HashSet<TestCase>();        
-        if(suites.contains(",")) { 
-            for(String suiteName : suites.split(",")) {
-                for(TestSuite suite : getTestSuites()) {
-                    if(suite.getTestSuiteTitle().equals(StringUtils.trim(suiteName))) {
-                        tcs.addAll(suite.getTestcases());
-                    }
-                }
-            }
-        } else {
-            for(TestSuite suite : getTestSuites()) {
-                if(suite.getTestSuiteTitle().equals(suites)) {
-                    tcs.addAll(suite.getTestcases());
-                }
-            }
-        }
-        
-        return tcs;
-    }
-    
-    public HashSet<TestCase> getAllTestCases() {
-        HashSet<TestCase> allCases = new HashSet<TestCase>();
-        //FIXME: What about test cases not assigned to a Suite?
-        //allCases.addAll(getTestCases());
-        for(TestSuite suite : getTestSuites()) {
-            allCases.addAll(suite.getTestcases());
-        }        
-        return allCases;
-    }
-    
-    /**
-     * Small method that returns the union of test cases having scripts
-     * @return 
-     */
-    public HashSet<TestCase> getAllTestCasesWithScripts() {
-        HashSet<TestCase> allCases = new HashSet<TestCase>();
-        
-        for(TestCase tc : getTestCases()) {            
-            if(tc.getScripts() == null) {
-                log.fine( String.format( "Test case %s was null for testplan %s", tc.getTestCaseTitle(),  getTestPlanTitle()) );
-            } else if(tc.getScripts() != null && tc.getScripts().isEmpty()) {
-                log.fine( String.format( "Test case %s has no testscripts %s", tc.getTestCaseTitle(), getTestPlanTitle()) );
-            }          
-            if(tc.getScripts() != null && !tc.getScripts().isEmpty()) {
-                allCases.add(tc);
-            }
-        }
-        
-        for(TestSuite suite : getTestSuites()) {
-            for(TestCase tc : suite.getTestcases()) {
-                if(tc.getScripts() != null && !tc.getScripts().isEmpty()) {
-                    allCases.add(tc);
-                }
-            }
-        }
-        
-        return allCases;
     }
     
     /**
