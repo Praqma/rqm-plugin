@@ -217,13 +217,6 @@ public class TestCase extends RqmObject<TestCase> {
     }
 
     @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 79 * hash + (this.testCaseTitle != null ? this.testCaseTitle.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
     public String getResourceName() {
         return RESOURCE_RQM_NAME;
     }
