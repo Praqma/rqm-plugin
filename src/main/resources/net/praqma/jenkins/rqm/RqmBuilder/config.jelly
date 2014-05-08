@@ -4,11 +4,11 @@
     <f:dropdownDescriptorSelector descriptors="${descriptor.getCollectionStrategies()}" field="collectionStrategy" title="${%Testcase selection strategy}"/>
     
     <f:entry field="preBuildSteps" title="${%Pre Build Steps}">
-        <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.preBuildSteps}" addCaption="Add pre build step" hasHeader="true"/>
+        <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.preBuildSteps}" addCaption="Add pre build step" hasHeader="true" name="preBuildSteps"/>
     </f:entry>
 
     <f:entry field="postBuildSteps" title="${%Post Build Step}">
-        <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.postBuildSteps}" addCaption="Add post build step" hasHeader="true"/>
+        <f:hetero-list descriptors="${descriptor.getApplicableBuildSteps(it)}" items="${instance.postBuildSteps}" addCaption="Add post build step" hasHeader="true" name="postBuildSteps"/>
     </f:entry>
 
     <f:entry title="${%Per Test Case Builder}" field="iterativeTestCaseBuilders">

@@ -3,7 +3,7 @@
     <parent> 
         <groupId>org.jenkins-ci.plugins</groupId> 
         <artifactId>plugin</artifactId> 
-        <version>1.532.2</version>
+        <version>1.532.3</version>
     </parent>
     <groupId>net.praqma</groupId>
     <artifactId>rqm-plugin</artifactId>
@@ -51,15 +51,8 @@
         <dependency>
             <groupId>net.praqma</groupId>
             <artifactId>praqmajutils</artifactId>
-            <version>0.1.34</version>
+            <version>0.1.33</version>
         </dependency>
-        <!--
-        <dependency>
-            <groupId>net.praqma</groupId>
-            <artifactId>prqm-api</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-        -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>

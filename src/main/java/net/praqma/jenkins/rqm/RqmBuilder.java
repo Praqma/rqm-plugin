@@ -43,7 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.RqmObject;
-import net.praqma.jenkins.rqm.model.TestPlan;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -55,19 +54,18 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class RqmBuilder extends Builder {
     private static final Logger log = Logger.getLogger(RqmBuilder.class.getName());
-    public final List<BuildStep> preTestBuildSteps;
-    public final List<BuildStep> postTestBuildSteps;
+    public final List<BuildStep> preBuildSteps;
+    public final List<BuildStep> postBuildSteps;
     public final List<BuildStep> iterativeTestCaseBuilders;
     public final RqmCollector collectionStrategy;
      
     @DataBoundConstructor
-    public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preTestBuildSteps, final List<BuildStep> postTestBuildSteps) {        
+    public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) {        
         this.collectionStrategy = collectionStrategy;
-        this.preTestBuildSteps = preTestBuildSteps;
-        this.postTestBuildSteps = postTestBuildSteps;
+        this.preBuildSteps = preBuildSteps;
+        this.postBuildSteps = postBuildSteps;
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
-        collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());
-        //this.collector = new RqmTestSuiteCollectionStrategy(getGlobalPort(), getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), planName, projectName, suiteNames);
+        collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());        
     }
     
     public boolean checkGlobaConfiguration() throws IOException {
@@ -141,8 +139,7 @@ public class RqmBuilder extends Builder {
         try {            
             checkGlobaConfiguration();
             results = collectionStrategy.collect(listener, build);            
-            success = collectionStrategy.execute(build, listener, launcher, preTestBuildSteps, preTestBuildSteps, iterativeTestCaseBuilders, results);
-            
+            success = collectionStrategy.execute(build, listener, launcher, preBuildSteps, postBuildSteps, iterativeTestCaseBuilders, results);            
         } catch (Exception ex) {
             success = false;
             console.println(String.format("Failed to retrieve relevant test data. Message was:%n%s", ex.getMessage()));
