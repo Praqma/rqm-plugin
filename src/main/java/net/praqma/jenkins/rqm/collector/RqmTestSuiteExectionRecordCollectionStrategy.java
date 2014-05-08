@@ -88,6 +88,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
 
     @Override
     public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
+        
         boolean success = true;
         List<TestSuiteExecutionRecord> records = (List<TestSuiteExecutionRecord>)results;
         
@@ -112,7 +113,8 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                 for(final TestScript ts : tc.getScripts()) {                    
                     listener.getLogger().println(String.format( " * Test Script %s [%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
                     for(BuildStep bstep : iterativeTestCaseBuilders) {
-                        build.addAction(new EnvironmentContributingAction() {
+                        
+                        final EnvironmentContributingAction envAction = new EnvironmentContributingAction() {
                             @Override
                             public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
                                 RqmBuilder.addToEnvironment(ev, rec.getTestSuite().attributes());
@@ -135,9 +137,12 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                             public String getUrlName() {
                                 return null;
                             }
-                        });
-                           
+                        };
+                        
+                        build.addAction(envAction);
+                        
                         success &= bstep.perform(build, launcher, listener);
+                        build.getActions().remove(envAction);
                     }                    
                 }
             }
@@ -149,8 +154,6 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                 success &= bs.perform(build, launcher, listener);
             }
         }
-        
-        //build.addAction(new RqmBuildAction(records));
         
         return success;
     }
