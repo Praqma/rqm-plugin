@@ -10,6 +10,12 @@
     <version>2.1-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>RQM Plugin</name>
+    <developers>
+        <developer>
+            <id>praqma_josra</id>
+            <name>Praqma Josra</name>
+        </developer>
+    </developers>
     <build>
         <plugins>
             <plugin>
