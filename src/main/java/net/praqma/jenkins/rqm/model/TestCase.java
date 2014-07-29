@@ -177,7 +177,7 @@ public class TestCase extends RqmObject<TestCase> {
             return other.getRqmObjectResourceUrl().equals(getRqmObjectResourceUrl());
         }
     }
-
+    
     @Override
     public String getResourceName() {
         return RESOURCE_RQM_NAME;

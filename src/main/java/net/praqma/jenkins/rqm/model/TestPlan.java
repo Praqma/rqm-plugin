@@ -25,7 +25,6 @@ import net.praqma.jenkins.rqm.request.RQMUtilities;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
 import net.praqma.util.structure.Tuple;
 import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

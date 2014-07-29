@@ -10,6 +10,11 @@
     <version>2.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>RQM Plugin</name>
+    <description>
+        This plugin integrates with Rational Quality Manager. It extracts automatic test cases from test suite execution records 
+        and reads input paramater information attached to the test cases test script as environment variables in your Jenkins jobs.
+        This plugin requires RQM v4.X
+    </description>
     <build>
         <plugins>
             <plugin>

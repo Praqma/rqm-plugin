@@ -139,8 +139,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                             }
                         };
                         
-                        build.addAction(envAction);
-                        
+                        build.addAction(envAction);                        
                         success &= bstep.perform(build, launcher, listener);
                         build.getActions().remove(envAction);
                     }                    

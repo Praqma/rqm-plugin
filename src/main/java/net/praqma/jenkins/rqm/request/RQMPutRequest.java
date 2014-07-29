@@ -27,8 +27,8 @@ public class RQMPutRequest implements RQMRequest {
     
     private static final Pattern RESOURCE_PATTERN = Pattern.compile("http([s]?)://(.+)(:([0-9]+))?/(.+)/service/com.ibm.rqm.integration.service.IIntegrationService/resources/([^/]+)/([^/]+)(/(.*))?");
     private PutMethod method = null;
-    private RQMHttpClient client;
-    private String requestContent;
+    private final RQMHttpClient client;
+    private final String requestContent;
     private static final Logger log = Logger.getLogger(RQMPutRequest.class.getName());
     
     

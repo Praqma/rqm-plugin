@@ -147,9 +147,6 @@ public class RqmBuilder extends Builder {
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
         } finally {
             build.addAction(new RqmBuildAction(results));
-            if(!success) {
-                console.println("Error caught in test execution, review log for details");
-            }
         }
  
         return success;
