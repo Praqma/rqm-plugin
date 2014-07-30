@@ -10,6 +10,7 @@
     <version>2.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>RQM Plugin</name>
+    <url>https://wiki.jenkins-ci.org/display/JENKINS/RQM+plugin</url>
 
     <description>
         This plugin integrates with Rational Quality Manager. It extracts automatic test cases from test suite execution records 
@@ -135,6 +136,20 @@
             </reporting>
         </profile>
     </profiles>
+    
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <configuration>
+		  <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+		</configuration>                
+            </plugin>
+    
+                
+        </plugins>
+    </reporting>
     
     <licenses> 
         <license> 
