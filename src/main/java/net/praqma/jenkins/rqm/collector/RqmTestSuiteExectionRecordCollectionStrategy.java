@@ -139,8 +139,13 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                             }
                         };
                         
+                        
                         build.addAction(envAction);                        
-                        success &= bstep.perform(build, launcher, listener);
+                        boolean current = bstep.perform(build, launcher, listener);
+                        if(!current) {
+                            listener.getLogger().println(String.format("Non-zero exit code for test script: %s", ts.getScriptTitle()));
+                        }
+                        success &= current;
                         build.getActions().remove(envAction);
                     }                    
                 }
