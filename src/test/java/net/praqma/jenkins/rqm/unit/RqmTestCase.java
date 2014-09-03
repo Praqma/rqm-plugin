@@ -23,24 +23,16 @@
  */
 package net.praqma.jenkins.rqm.unit;
 
-import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
 import hudson.model.FreeStyleProject;
-import hudson.tasks.BatchFile;
-import hudson.tasks.BuildStep;
 import hudson.tasks.Builder;
-import hudson.tasks.Shell;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import net.praqma.jenkins.rqm.RqmBuilder;
-import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestSuite;
-import org.apache.commons.lang.SystemUtils;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.Mockito;
 /**
  *
  * @author mads
