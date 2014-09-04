@@ -95,7 +95,10 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
         List<TestSuiteExecutionRecord> records = (List<TestSuiteExecutionRecord>)results;
         
         for(TestSuiteExecutionRecord tser : records) {
-            totalNumberOfScripts += tser.getAllTestCases().size();
+            
+            for(TestCase tc : tser.getAllTestCases()) {
+                totalNumberOfScripts += tc.getScripts().size();
+            }
         }
         
         if(preBuildSteps != null) {
@@ -117,7 +120,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                 }
                 
                 for(final TestScript ts : tc.getScripts()) {                    
-                    listener.getLogger().println(String.format( " * Test Script %s [%s]",ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
+                    listener.getLogger().println(String.format( " * Test Script %s [%s]", ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
                     for(BuildStep bstep : iterativeTestCaseBuilders) {
                         
                         final EnvironmentContributingAction envAction = new EnvironmentContributingAction() {
@@ -169,18 +172,18 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
         }
         
         listener.getLogger().println( String.format("Successfully executed %s out of %s test scripts", executionCounter, totalNumberOfScripts) );
-        listener.getLogger().println( "Listing test cases which failed executing. Have you remembered to add the proper fields to your test scripts?" );
-        
-        for(TestSuiteExecutionRecord tser : records) {
-            for(TestCase tc : tser.getAllTestCases()) {
-                for(TestScript tscript : tc.getScripts()) {
-                    if(!tscript.isExecutionSuccess()) {
-                        listener.getLogger().println(tscript);
+        if(executionCounter != totalNumberOfScripts) {
+            listener.getLogger().println( "Listing test cases which failed executing. Have you remembered to add the proper fields to your test scripts?" );
+            for(TestSuiteExecutionRecord tser : records) {
+                for(TestCase tc : tser.getAllTestCases()) {
+                    for(TestScript tscript : tc.getScripts()) {
+                        if(!tscript.isExecutionSuccess()) {
+                            listener.getLogger().println(tscript);
+                        }
                     }
                 }
             }
         }
-        
         return success;
     }
 

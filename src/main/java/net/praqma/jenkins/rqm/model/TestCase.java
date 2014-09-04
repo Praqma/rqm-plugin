@@ -136,14 +136,14 @@ public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase
         for(int i=0; i<list.getLength(); i++) {
             Node elem = list.item(i);
             if(elem.getNodeType() == Node.ELEMENT_NODE) {
-                log.fine("Title for test case: "+title);
                 title = ((Element)elem).getTextContent();                    
             }
         }
 
         this.setTestCaseTitle(title);
+        /*
         NodeList nlistForTestSuites = doc.getElementsByTagName("ns4:remotescript");
-
+        
         for(int i=0; i<nlistForTestSuites.getLength(); i++) {
             Node elem = nlistForTestSuites.item(i);
             if(elem.getNodeType() == Node.ELEMENT_NODE) {
@@ -152,6 +152,7 @@ public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase
                 getScripts().add(ts);
             }
         }
+        */ 
         return this;                       
     }
 
