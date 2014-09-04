@@ -35,8 +35,9 @@ public class TestScript extends RqmObject<TestScript> {
     private final static String RESOURCE_RQM_MANUAL_NAME = "testscript";
     private final static String RESOURCE_RQM_NONMANUAL_NAME = "remotescript";    
     private static final Logger log = Logger.getLogger(TestScript.class.getName());       
-    private String scriptTitle = "No scipt type defined";
+    private String scriptTitle = "No script type defined";
     private boolean manual = false;
+    private boolean executionSuccess = true;
     public HashMap<String,String> customAttributes = new HashMap<String, String>();
     
     public boolean isManual() {
@@ -94,8 +95,7 @@ public class TestScript extends RqmObject<TestScript> {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     
-    public TestScript() { 
-    }
+    public TestScript() { }
     
     public TestScript(String rqmObjectResourceUrl) throws RQMObjectParseException {
         this();
@@ -157,5 +157,23 @@ public class TestScript extends RqmObject<TestScript> {
         }
         return RESOURCE_RQM_NONMANUAL_NAME;
     }
-    
+
+    /**
+     * @return the executionSuccess
+     */
+    public boolean isExecutionSuccess() {
+        return executionSuccess;
+    }
+
+    /**
+     * @param executionSuccess the executionSuccess to set
+     */
+    public void setExecutionSuccess(boolean executionSuccess) {
+        this.executionSuccess = executionSuccess;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s, Attributes = %s%nLink to this script: %s", scriptTitle, customAttributes, rqmObjectResourceUrl);
+    }
 }

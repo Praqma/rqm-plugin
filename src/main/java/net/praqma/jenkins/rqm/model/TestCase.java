@@ -194,8 +194,21 @@ public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase
         return RESOURCE_RQM_NAME;
     }
 
+
     @Override
     public int compareTo(TestCase t) {
         return Integer.compare(this.executionOrder, t.executionOrder);
+    }
+    
+    public boolean hasTestScriptExecutionErrors() {
+        boolean hasFailures = false;
+        
+        for(TestScript tc : getScripts()) {
+            if(!tc.isExecutionSuccess()) {
+                return true;
+            }
+        }
+        
+        return hasFailures;
     }
 }

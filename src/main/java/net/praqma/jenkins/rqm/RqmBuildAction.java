@@ -26,6 +26,7 @@ package net.praqma.jenkins.rqm;
 import hudson.model.Action;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import net.praqma.jenkins.rqm.model.RqmObject;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TopLevelObject;
@@ -59,14 +60,36 @@ public class RqmBuildAction implements Action {
         return NAME.replaceAll(" ", "");
     }
     
-    //TODO: Implement me
     public List<TestCase> getSelectedTestCases() {
         List<TestCase> testcases = new ArrayList<TestCase>();
-        for(RqmObject obj : topLevelObjects) {
-            if(obj instanceof TopLevelObject) {
-                testcases.addAll(((TopLevelObject)obj).getAllTestCases());
+        if(topLevelObjects != null) {
+            for(RqmObject obj : topLevelObjects) {
+                if(obj instanceof TopLevelObject) {
+                    testcases.addAll(((TopLevelObject)obj).getAllTestCases());
+                }
             }
         }
         return testcases;
+    }
+    
+    public List<TestCase> getFailedTests() {
+        List<TestCase> failedTests = new ArrayList<TestCase>();
+        if(topLevelObjects != null) {
+            for(RqmObject obj : topLevelObjects) {
+                if(obj instanceof TopLevelObject) {
+                    Set<TestCase> allCases = ((TopLevelObject)obj).getAllTestCases();
+                    for(TestCase tc: allCases) {
+                        if(tc.hasTestScriptExecutionErrors()) {
+                            failedTests.add(tc);
+                        }
+                    }
+                }
+            }
+        }
+        return failedTests;                
+    }
+    
+    public boolean isProblem() {
+        return !getFailedTests().isEmpty();
     }
 }
