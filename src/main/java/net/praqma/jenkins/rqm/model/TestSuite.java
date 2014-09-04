@@ -72,7 +72,6 @@ public class TestSuite extends RqmObject<TestSuite> {
                         if(suiteElements.item(selement).getNodeType() == Node.ELEMENT_NODE) {
                             Element suteElem = (Element)suiteElements.item(selement);
                             String testCaseHref = ((Element)suteElem.getElementsByTagName("ns4:testcase").item(0)).getAttribute("href");
-                            //String testScriptHref = ((Element)suteElem.getElementsByTagName("ns4:remotescript")).getAttribute("href");
                             TestCase tc = new TestCase(testCaseHref);
                             getTestcases().add(tc);
                         }

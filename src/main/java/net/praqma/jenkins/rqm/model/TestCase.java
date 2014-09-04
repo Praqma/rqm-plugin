@@ -182,4 +182,16 @@ public class TestCase extends RqmObject<TestCase> {
     public String getResourceName() {
         return RESOURCE_RQM_NAME;
     }
+    
+    public boolean hasTestScriptExecutionErrors() {
+        boolean hasFailures = false;
+        
+        for(TestScript tc : getScripts()) {
+            if(!tc.isExecutionSuccess()) {
+                return true;
+            }
+        }
+        
+        return hasFailures;
+    }
 }

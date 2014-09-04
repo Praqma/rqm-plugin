@@ -81,7 +81,6 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
         NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(planName, getPort(), planName, executionRecordName);
         String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);        
         RqmParameterList list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), request, filterProperties, "GET", null);
-        log.fine(list.toString());
         RqmObjectCreator<TestSuiteExecutionRecord> object = new RqmObjectCreator<TestSuiteExecutionRecord>(TestSuiteExecutionRecord.class, list);        
         return (List<T>)build.getWorkspace().act(object);
     }
@@ -89,8 +88,15 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     @Override
     public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
         
+        int executionCounter = 0;
+        int totalNumberOfScripts = 0;
         boolean success = true;
+        
         List<TestSuiteExecutionRecord> records = (List<TestSuiteExecutionRecord>)results;
+        
+        for(TestSuiteExecutionRecord tser : records) {
+            totalNumberOfScripts += tser.getAllTestCases().size();
+        }
         
         if(preBuildSteps != null) {
             listener.getLogger().println(String.format("Performing pre build step"));
@@ -139,13 +145,16 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                             }
                         };
                         
+                        build.addAction(envAction);
                         
-                        build.addAction(envAction);                        
-                        boolean current = bstep.perform(build, launcher, listener);
-                        if(!current) {
-                            listener.getLogger().println(String.format("Non-zero exit code for test script: %s", ts.getScriptTitle()));
+                        boolean tsSuccess = bstep.perform(build, launcher, listener);
+                        if(!tsSuccess) {
+                            listener.getLogger().println( String.format( "Non-zero exit code for test script: %s", ts.getScriptTitle() ) );
+                            ts.setExecutionSuccess(false);
+                        } else {                            
+                            executionCounter++;
                         }
-                        success &= current;
+                        success &= tsSuccess;
                         build.getActions().remove(envAction);
                     }                    
                 }
@@ -159,9 +168,20 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
             }
         }
         
+        listener.getLogger().println( String.format("Successfully executed %s out of %s test scripts", executionCounter, totalNumberOfScripts) );
+        listener.getLogger().println( "Listing test cases which failed executing. Have you remembered to add the proper fields to your test scripts?" );
+        
+        for(TestSuiteExecutionRecord tser : records) {
+            for(TestCase tc : tser.getAllTestCases()) {
+                for(TestScript tscript : tc.getScripts()) {
+                    if(!tscript.isExecutionSuccess()) {
+                        listener.getLogger().println(tscript);
+                    }
+                }
+            }
+        }
+        
         return success;
     }
-    
-    
-    
+
 }

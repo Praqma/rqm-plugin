@@ -1,18 +1,55 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:local="local">   
         <l:layout title="RQM Test Plan overview">       
+            <l:header>
+                <style>
+                    
+                    .success {
+                        color:green;
+                    }
+
+                    .rqm-table-header {
+                        font-size:13px;
+                    }
+
+                    #rqm-results-table {
+                        border-style:solid;
+                        border-width:1px;
+                        border-color:black;
+                    }
+                </style>
+            </l:header>
             <l:main-panel>
-                <h3>Included test cases</h3>
-                <table border="0">
+                <h3>Included test scripts</h3>
+                <p>Test scripts marked with red signs experienced abnormal execution</p>
+                <table id="rqm-results-table">
                     <thead>
-                        <th>Test case title</th>
-                        <th>Test case resource url</th>
+                        <tr>
+                            <th scope="col" id="rqm-table-header">Test case</th>
+                            <th scope="col" id="rqm-table-header">Test scripts</th>
+                        </tr>
                     </thead>
+
+                    <tfoot>
+                        
+                    </tfoot>
+
                     <tbody>
                         <j:forEach items="${it.getSelectedTestCases()}" var="case">
                             <tr>
-                                <td>${case.getTestCaseTitle()}</td>
-                                <td>${case.getRqmObjectResourceUrl()}</td>
+                                <td class="test-case-title-cell"><a href="${case.getRqmObjectResourceUrl()}">${case.getTestCaseTitle()}</a></td>
+                                <td class="test-scripts-cell">
+                                    <j:forEach items="${case.getScripts()}" var="ts">
+                                        <j:choose>
+                                            <j:when test="${!ts.isExecutionSuccess()}">
+                                                <div class="error" style="clear:right">${ts.getScriptTitle()}</div>
+                                            </j:when>
+                                            <j:otherwise> 
+                                                <div class="success" style="clear:right">${ts.getScriptTitle()}</div>
+                                            </j:otherwise>
+                                        </j:choose>
+                                    </j:forEach>
+                                </td>                        
                             </tr>                            
                         </j:forEach>                        
                     </tbody>
