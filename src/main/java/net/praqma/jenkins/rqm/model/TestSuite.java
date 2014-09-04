@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
@@ -35,7 +37,7 @@ public class TestSuite extends RqmObject<TestSuite> {
     private static final Logger log = Logger.getLogger(TestSuite.class.getName());
     private static final String RESOURCE_RQM_NAME = "testsuite";
     private String testSuiteTitle;
-    private Set<TestCase> testcases;
+    private SortedSet<TestCase> testcases;
     private Set<TestSuiteExecutionRecord> testSuiteExecutionRecords;
    
     public TestSuite() { }
@@ -46,7 +48,7 @@ public class TestSuite extends RqmObject<TestSuite> {
     
     
     public TestSuite(String rqmObjectResourceUrl, String suiteName) {
-        testcases = new HashSet<TestCase>();
+        testcases = new TreeSet<TestCase>();
         this.testSuiteTitle = suiteName;
         this.rqmObjectResourceUrl = rqmObjectResourceUrl;
     }
@@ -69,10 +71,14 @@ public class TestSuite extends RqmObject<TestSuite> {
                     //Now find all suite elements
                     NodeList suiteElements = el.getElementsByTagName("ns4:suiteelement");
                     for(int selement = 0; selement<suiteElements.getLength(); selement++) {
+                        
+                        int executionOrder = Integer.parseInt(((Element)suiteElements.item(selement)).getAttribute("elementindex"))+1;
+                        
                         if(suiteElements.item(selement).getNodeType() == Node.ELEMENT_NODE) {
                             Element suteElem = (Element)suiteElements.item(selement);
                             String testCaseHref = ((Element)suteElem.getElementsByTagName("ns4:testcase").item(0)).getAttribute("href");
                             TestCase tc = new TestCase(testCaseHref);
+                            tc.setExecutionOrder(executionOrder);
                             getTestcases().add(tc);
                         }
                     }
@@ -90,14 +96,14 @@ public class TestSuite extends RqmObject<TestSuite> {
     /**
      * @return the testcases
      */
-    public Set<TestCase> getTestcases() {
+    public SortedSet<TestCase> getTestcases() {
         return testcases;
     }
 
     /**
      * @param testcases the testcases to set
      */
-    public void setTestcases(Set<TestCase> testcases) {
+    public void setTestcases(SortedSet<TestCase> testcases) {
         this.testcases = testcases;
     }
 

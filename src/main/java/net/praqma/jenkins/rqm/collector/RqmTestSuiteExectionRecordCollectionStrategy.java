@@ -109,7 +109,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
             listener.getLogger().println(String.format( "Test Suite %s [%s] ", rec.getTestSuite().getTestSuiteTitle(), rec.getTestSuite().getRqmObjectResourceUrl()  ));
             listener.getLogger().println(String.format( "Test Suite Execution Record %s [%s]",rec.getTestSuiteExecutionRecordTitle(), rec.getRqmObjectResourceUrl()) );
             for(final TestCase tc : rec.getTestSuite().getTestcases()) {
-                listener.getLogger().println(String.format( " Test Case %s [%s]",tc.getTestCaseTitle(), tc.getRqmObjectResourceUrl()) );
+                listener.getLogger().println(String.format( " Test Case %s(%s) [%s]",tc.getTestCaseTitle(), tc.getExecutionOrder(), tc.getRqmObjectResourceUrl()) );
                 
                 if(tc.getScripts().isEmpty()) {
                     listener.getLogger().println("Test case %s does not contain any scripts, setting result to unstable");

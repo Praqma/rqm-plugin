@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
@@ -178,8 +180,8 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
     }
 
     @Override
-    public Set<TestCase> getAllTestCases() {
-        HashSet<TestCase> testCases = new HashSet<TestCase>();
+    public SortedSet<TestCase> getAllTestCases() {
+        SortedSet<TestCase> testCases = new TreeSet<TestCase>();
         testCases.addAll(getTestSuite().getTestcases());
         return testCases;
     }

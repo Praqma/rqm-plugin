@@ -30,11 +30,20 @@ import org.w3c.dom.NodeList;
  *
  * @author Praqma
  */
-public class TestCase extends RqmObject<TestCase> {
+public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase>{
     private static final Logger log = Logger.getLogger(TestCase.class.getName());
     private final static String RESOURCE_RQM_NAME = "testcase";
     private String testCaseTitle;
+    private int executionOrder;
     private List<TestScript> scripts = new ArrayList<TestScript>();
+ 
+    public int getExecutionOrder() {
+        return this.executionOrder;
+    }
+    
+    public void setExecutionOrder(int executionOrder) {
+        this.executionOrder = executionOrder;
+    }
     
     /**
      * @return the scripts
@@ -160,7 +169,9 @@ public class TestCase extends RqmObject<TestCase> {
                     builder.append(s);
                 }
             }
-        }        
+        } else {
+            builder.append(getTestCaseTitle());
+        }         
         return builder.toString();
     }
     
@@ -181,6 +192,11 @@ public class TestCase extends RqmObject<TestCase> {
     @Override
     public String getResourceName() {
         return RESOURCE_RQM_NAME;
+    }
+
+    @Override
+    public int compareTo(TestCase t) {
+        return Integer.compare(this.executionOrder, t.executionOrder);
     }
     
     public boolean hasTestScriptExecutionErrors() {

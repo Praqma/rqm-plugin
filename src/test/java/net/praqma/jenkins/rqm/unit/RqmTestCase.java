@@ -27,6 +27,8 @@ import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
 import java.util.HashSet;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import net.praqma.jenkins.rqm.RqmBuilder;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
@@ -51,7 +53,7 @@ public class RqmTestCase {
         TestCase tc = new TestCase("TestCase1");
         tc.setRqmObjectResourceUrl("testcase:tc1");
  
-        HashSet<TestCase> cases = new HashSet<TestCase>();
+        SortedSet<TestCase> cases = new TreeSet<TestCase>();
         cases.add(tc);
         
         suite.setTestcases(cases);
