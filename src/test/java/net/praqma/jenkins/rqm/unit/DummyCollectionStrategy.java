@@ -31,6 +31,8 @@ import hudson.tasks.BuildStep;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.RqmCollectorDescriptor;
 import net.praqma.jenkins.rqm.model.RqmObject;
@@ -85,7 +87,7 @@ public class DummyCollectionStrategy extends RqmCollector {
         TestScript ts2 = new TestScript("testcript:ts2");
         tc2.setScripts(Arrays.asList(ts2));
         
-        HashSet<TestCase> cases = new HashSet<TestCase>();
+        SortedSet<TestCase> cases = new TreeSet<TestCase>();
         cases.add(tc);
         cases.add(tc2);
 

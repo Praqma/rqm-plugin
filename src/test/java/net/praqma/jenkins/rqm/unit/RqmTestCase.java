@@ -23,24 +23,18 @@
  */
 package net.praqma.jenkins.rqm.unit;
 
-import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
 import hudson.model.FreeStyleProject;
-import hudson.tasks.BatchFile;
-import hudson.tasks.BuildStep;
 import hudson.tasks.Builder;
-import hudson.tasks.Shell;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import net.praqma.jenkins.rqm.RqmBuilder;
-import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestSuite;
-import org.apache.commons.lang.SystemUtils;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.Mockito;
 /**
  *
  * @author mads
@@ -59,7 +53,7 @@ public class RqmTestCase {
         TestCase tc = new TestCase("TestCase1");
         tc.setRqmObjectResourceUrl("testcase:tc1");
  
-        HashSet<TestCase> cases = new HashSet<TestCase>();
+        SortedSet<TestCase> cases = new TreeSet<TestCase>();
         cases.add(tc);
         
         suite.setTestcases(cases);
