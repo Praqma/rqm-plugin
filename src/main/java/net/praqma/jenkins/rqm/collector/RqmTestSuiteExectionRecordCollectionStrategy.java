@@ -119,7 +119,8 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                     build.setResult(Result.UNSTABLE);
                 }
                 
-                for(final TestScript ts : tc.getScripts()) {                    
+                for(final TestScript ts : tc.getScripts()) {
+                    boolean tsSuccess = true;
                     listener.getLogger().println(String.format( " * Test Script %s [%s]", ts.getScriptTitle(), ts.getRqmObjectResourceUrl()) );
                     for(BuildStep bstep : iterativeTestCaseBuilders) {
                         
@@ -148,18 +149,19 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                             }
                         };
                         
-                        build.addAction(envAction);
-                        
-                        boolean tsSuccess = bstep.perform(build, launcher, listener);
-                        if(!tsSuccess) {
-                            listener.getLogger().println( String.format( "Non-zero exit code for test script: %s", ts.getScriptTitle() ) );
-                            ts.setExecutionSuccess(false);
-                        } else {                            
-                            executionCounter++;
-                        }
-                        success &= tsSuccess;
+                        build.addAction(envAction);                        
+                        tsSuccess &= bstep.perform(build, launcher, listener);                        
                         build.getActions().remove(envAction);
-                    }                    
+                    }
+                    
+                    success &= tsSuccess;
+                    
+                    if(!tsSuccess) {
+                        listener.getLogger().println( String.format( "Non-zero exit code for test script: %s", ts.getScriptTitle() ) );
+                        ts.setExecutionSuccess(false);
+                    } else {
+                        executionCounter++;
+                    }
                 }
             }
         }
