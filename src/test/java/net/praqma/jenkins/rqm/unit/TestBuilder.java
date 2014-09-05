@@ -23,22 +23,14 @@
  */
 package net.praqma.jenkins.rqm.unit;
 
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.tasks.BatchFile;
-import hudson.tasks.BuildStep;
-import hudson.tasks.Shell;
-import java.util.Arrays;
 import net.praqma.jenkins.rqm.RqmBuildAction;
-import net.praqma.jenkins.rqm.RqmBuilder;
-import net.praqma.jenkins.rqm.RqmCollector;
-import net.praqma.jenkins.rqm.collector.DummyCollectionStrategy;
-import org.apache.commons.lang.SystemUtils;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.mockito.Mockito;
 
 /**
  *
@@ -46,52 +38,13 @@ import org.mockito.Mockito;
  */
 public class TestBuilder extends RqmTestCase {
     
-    private RqmBuilder createBuilder(boolean shouldFail) {
-        RqmBuilder builder = null;
-        RqmCollector collector = new DummyCollectionStrategy(shouldFail);
-        if(!shouldFail) {
-            if(SystemUtils.IS_OS_WINDOWS) {        
-                final BuildStep f = new BatchFile("dir");                      
-                final BuildStep f2 = new BatchFile("dir");            
-                builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
-
-            } else {
-                final BuildStep s = new Shell("ls");
-                final BuildStep s2 = new Shell("ls");
-                builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
-            }
-        } else {
-            if(SystemUtils.IS_OS_WINDOWS) {        
-                final BuildStep f = new BatchFile("dir");                      
-                final BuildStep f2 = new BatchFile("exit 1");            
-                builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
-
-            } else {
-                final BuildStep s = new Shell("ls");
-                final BuildStep s2 = new Shell("exit 1");
-                builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
-            }
-        }
-        return builder;
-    }
-            
-        
     @Test
-    public void buildSuccess() throws Exception {
-        RqmBuilder builder = createBuilder(false);        
-        RqmBuilder spy = Mockito.spy(builder);
-        
-        //Mock the configuration 
-        Mockito.doReturn(true).when(spy).checkGlobaConfiguration();        
-        FreeStyleProject proj = createSuccesConfiguration(spy);
-        
-        AbstractBuild<?,?> build = proj.scheduleBuild2(0).get();
-        
+    public void buildSuccess() throws Exception {     
+        FreeStyleProject proj = createSuccesConfiguration();        
+        AbstractBuild<?,?> build = proj.scheduleBuild2(0).get();        
         RqmBuildAction action = build.getAction(RqmBuildAction.class);
-        assertNotNull(action);
-        
-        assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));
-        
+        assertNotNull(action);        
+        assertTrue(build.getResult().isBetterOrEqualTo(Result.SUCCESS));        
     }
     
     /**
@@ -100,16 +53,28 @@ public class TestBuilder extends RqmTestCase {
      */
     @Test
     public void buildFailure() throws Exception {
-        RqmBuilder builder = createBuilder(true);
-        
-        RqmBuilder spy = Mockito.spy(builder);
-        //Mock the configuration 
-        Mockito.doReturn(true).when(spy).checkGlobaConfiguration();
-        
-        FreeStyleProject proj = createFailingConfiguartion(spy);
+
+        FreeStyleProject proj = createFailingConfiguration();
 
         final FreeStyleBuild builres = proj.scheduleBuild2(0).get();        
         
         assertTrue(builres.getResult().isWorseThan(Result.SUCCESS));
+    }
+    
+    @Test
+    public void buildFailureWithCorrectConsoleMessages() throws Exception {
+        FreeStyleProject proj = createFailingConfiguration();
+        
+        jenkins.submit(jenkins.createWebClient().goTo("configure").getFormByName("config"));
+
+        final FreeStyleBuild builres = proj.scheduleBuild2(0).get();
+        
+        HtmlPage page = jenkins.createWebClient().getPage(builres, "console");
+        
+        System.out.println("HTMLPAGE = "+page.asText());
+        
+        assertTrue(page.asText().contains("Listing test cases which failed executing. Have you remembered to add the proper fields to your test scripts?"));
+        assertTrue(page.asText().contains("Link to this script: http://testscript1.dk"));
+        assertTrue(page.asText().contains("Link to this script: http://testscript2.dk"));                
     }
 }

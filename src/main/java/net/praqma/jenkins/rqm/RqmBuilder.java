@@ -67,36 +67,6 @@ public class RqmBuilder extends Builder {
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
         collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());        
     }
-    
-    public boolean checkGlobaConfiguration() throws IOException {
-        List<String> errors = new ArrayList<String>();
-        
-        if(getGlobalPort() == 0) {
-            errors.add("Port not defined in global configuration");
-        }
-        
-        if(StringUtils.isBlank(getGlobalHostName())) {
-            errors.add("Hostname not defined in global configuration");
-        }
-        
-        if(StringUtils.isBlank(getGlobalContextRoot())) {
-            errors.add("Context root not defined in global configuration");
-        }
-        
-        if(StringUtils.isBlank(getGlobalUsrName())) {
-            errors.add("Username not defined in global configuration");
-        }
-        
-        if(StringUtils.isBlank(getGlobalPasswd())) {
-            errors.add("Password not defined in global configuration");
-        }
-        
-        if(!errors.isEmpty()) {
-            throw new IOException(String.format("Error in configuration%n%s", errors));
-        }
-        
-        return true;
-    }
 
     public final int getGlobalPort() {
         return ((RqmBuilder.RqmDescriptor)getDescriptor()).getPort();
@@ -137,7 +107,7 @@ public class RqmBuilder extends Builder {
         boolean success = true;
         List<? extends RqmObject> results = null;
         try {            
-            checkGlobaConfiguration();
+            collectionStrategy.checkSetup();
             results = collectionStrategy.collect(listener, build);            
             success = collectionStrategy.execute(build, listener, launcher, preBuildSteps, postBuildSteps, iterativeTestCaseBuilders, results);            
         } catch (Exception ex) {

@@ -2,23 +2,23 @@
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     
     <f:section title="${%RQM Configuration}">
-        <f:entry field="contextRoot" title="${%QM Context Root}">
+        <f:entry field="contextRoot" title="${%QM Context Root}" default="qm">
            <f:textbox/>
         </f:entry>
 
-        <f:entry field="hostName" title="${%QM Server Host name}">
+        <f:entry field="hostName" title="${%QM Server Host name}" default="http://yourserver.com">
            <f:textbox/>
         </f:entry>
 
-        <f:entry field="port" title="${%QM Server Port}">
+        <f:entry field="port" title="${%QM Server Port}" default="9080">
            <f:textbox/>
         </f:entry>
 
-        <f:entry field="usrName" title="${%Username}" >
+        <f:entry field="usrName" title="${%Username}" default="user">
            <f:textbox/>
         </f:entry>
 
-        <f:entry field="passwd" title="${%Password}">
+        <f:entry field="passwd" title="${%Password}" default="password">
            <f:password/>
         </f:entry>
     </f:section>

@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
@@ -43,15 +45,15 @@ public class TestPlan extends RqmObject<TestPlan> {
     private final static String RESOURCE_RQM_NAME = "testplan";
     private static final Logger log = Logger.getLogger(TestPlan.class.getName());
     private String testPlanTitle;
-    private Set<TestCase> testCases = new HashSet<TestCase>();
-    private Set<TestSuite> testSuites = new HashSet<TestSuite>();
+    private SortedSet<TestCase> testCases = new TreeSet<TestCase>();
+    private SortedSet<TestSuite> testSuites = new TreeSet<TestSuite>();
     
     public TestPlan() {}
     
     public TestPlan(String testPlanName) {
         this.testPlanTitle = testPlanName;
-        testCases = new HashSet<TestCase>();
-        testSuites = new HashSet<TestSuite>();
+        testCases = new TreeSet<TestCase>();
+        testSuites = new TreeSet<TestSuite>();
     }
     
     @Override
@@ -161,14 +163,14 @@ public class TestPlan extends RqmObject<TestPlan> {
     /**
      * @return the testCases
      */
-    public Set<TestCase> getTestCases() {
+    public SortedSet<TestCase> getTestCases() {
         return testCases;
     }
 
     /**
      * @param testCases the testCases to set
      */
-    public void setTestCases(HashSet<TestCase> testCases) {
+    public void setTestCases(SortedSet<TestCase> testCases) {
         this.testCases = testCases;
     }
 
@@ -182,7 +184,7 @@ public class TestPlan extends RqmObject<TestPlan> {
     /**
      * @param testSuites the testSuites to set
      */
-    public void setTestSuites(Set<TestSuite> testSuites) {
+    public void setTestSuites(SortedSet<TestSuite> testSuites) {
         this.testSuites = testSuites;
     }    
 

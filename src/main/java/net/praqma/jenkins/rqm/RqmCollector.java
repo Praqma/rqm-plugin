@@ -30,10 +30,12 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStep;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.RqmObject;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author mads
@@ -77,7 +79,38 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
         setUsrName(usrName);
         setPasswd(passwd);
         setPort(port);       
-    }    
+    }
+    
+    public boolean checkSetup() throws IOException {
+        
+        List<String> errors = new ArrayList<String>();
+        
+        if(getPort() == 0) {
+            errors.add("Port not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getHostName())) {
+            errors.add("Hostname not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getContextRoot())) {
+            errors.add("Context root not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getUsrName())) {
+            errors.add("Username not defined in global configuration");
+        }
+        
+        if(StringUtils.isBlank(getPasswd())) {
+            errors.add("Password not defined in global configuration");
+        }
+        
+        if(!errors.isEmpty()) {
+            throw new IOException(String.format("Error in configuration%n%s", errors));
+        }
+        
+        return true;
+    }
     
     /**
      * @return the hostName
