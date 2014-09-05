@@ -24,15 +24,21 @@
 package net.praqma.jenkins.rqm.unit;
 
 import hudson.model.FreeStyleProject;
+import hudson.tasks.BatchFile;
+import hudson.tasks.BuildStep;
 import hudson.tasks.Builder;
+import hudson.tasks.Shell;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import net.praqma.jenkins.rqm.RqmBuilder;
+import net.praqma.jenkins.rqm.RqmCollector;
 import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestSuite;
+import org.apache.commons.lang.SystemUtils;
 import org.junit.Rule;
 import org.jvnet.hudson.test.JenkinsRule;
 /**
@@ -58,7 +64,7 @@ public class RqmTestCase {
         
         suite.setTestcases(cases);
         
-        HashSet<TestSuite> suites = new HashSet<TestSuite>();
+        SortedSet<TestSuite> suites = new TreeSet<TestSuite>();
         suites.add(suite);
         
         plan.setTestSuites(suites);
@@ -66,28 +72,52 @@ public class RqmTestCase {
         return plan;
     }
     
-    public FreeStyleProject createSuccesConfiguration(RqmBuilder builder) throws Exception {
+    public FreeStyleProject createSuccesConfiguration() throws Exception {
         FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
-        
-        List<Builder> blold = proj.getBuildersList().toList();
-        
-        proj.getBuildersList().clear();
-        proj.getBuildersList().add(builder);
-        proj.getBuildersList().addAll(blold);
-        
-        return proj;
-        
-    }
-    
-    public FreeStyleProject createFailingConfiguartion(RqmBuilder builder) throws Exception {
-        FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
-        
+        RqmBuilder builder = createBuilder(false);         
         List<Builder> blold = proj.getBuildersList().toList();        
         proj.getBuildersList().clear();
         proj.getBuildersList().add(builder);
         proj.getBuildersList().addAll(blold);
-        
-        return proj;
-        
+        return proj;       
+    }
+    
+    public FreeStyleProject createFailingConfiguration() throws Exception {
+        FreeStyleProject proj = jenkins.createFreeStyleProject("RQMProject");
+        RqmBuilder builder = createBuilder(true);         
+        List<Builder> blold = proj.getBuildersList().toList();        
+        proj.getBuildersList().clear();
+        proj.getBuildersList().add(builder);
+        proj.getBuildersList().addAll(blold); 
+        return proj;        
+    }
+    
+    private RqmBuilder createBuilder(boolean shouldFail) {
+        RqmBuilder builder = null;
+        RqmCollector collector = new net.praqma.jenkins.rqm.collector.DummyCollectionStrategy(shouldFail);
+        if(!shouldFail) {
+            if(SystemUtils.IS_OS_WINDOWS) {        
+                final BuildStep f = new BatchFile("dir");                      
+                final BuildStep f2 = new BatchFile("dir");            
+                builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
+
+            } else {
+                final BuildStep s = new Shell("ls");
+                final BuildStep s2 = new Shell("ls");
+                builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
+            }
+        } else {
+            if(SystemUtils.IS_OS_WINDOWS) {        
+                final BuildStep f = new BatchFile("dir");                      
+                final BuildStep f2 = new BatchFile("exit 1");            
+                builder = new RqmBuilder(collector, Arrays.asList(f,f2), Arrays.asList(f,f2), Arrays.asList(f,f2)  );
+
+            } else {
+                final BuildStep s = new Shell("ls");
+                final BuildStep s2 = new Shell("exit 1");
+                builder = new RqmBuilder(collector, Arrays.asList(s,s2), Arrays.asList(s,s2), Arrays.asList(s,s2)  );
+            }
+        }
+        return builder;
     }
 }

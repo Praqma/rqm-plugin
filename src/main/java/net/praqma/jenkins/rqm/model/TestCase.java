@@ -189,6 +189,11 @@ public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase
             return other.getRqmObjectResourceUrl().equals(getRqmObjectResourceUrl());
         }
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode(); //To change body of generated methods, choose Tools | Templates.
+    }
     
     @Override
     public String getResourceName() {
@@ -197,6 +202,10 @@ public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase
 
     @Override
     public int compareTo(TestCase t) {
+        if(this.executionOrder == t.executionOrder) {
+            return this.getRqmObjectResourceUrl().compareTo(t.getRqmObjectResourceUrl());
+        }
+        
         return Integer.compare(this.executionOrder, t.executionOrder);
     }
     

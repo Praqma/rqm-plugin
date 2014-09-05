@@ -60,6 +60,10 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     public final String planName;
     public final String projectName;
     
+    public RqmTestSuiteExectionRecordCollectionStrategy() { 
+        this("exrecor","planname","projname");
+    }
+    
     @DataBoundConstructor
     public RqmTestSuiteExectionRecordCollectionStrategy(final String executionRecordName, final String planName, final String projectName) {
         this.executionRecordName = executionRecordName;

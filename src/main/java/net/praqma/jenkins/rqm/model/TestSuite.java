@@ -33,7 +33,7 @@ import org.w3c.dom.NodeList;
  *
  * @author Praqma
  */
-public class TestSuite extends RqmObject<TestSuite> {
+public class TestSuite extends RqmObject<TestSuite> implements Comparable<TestSuite>{
     private static final Logger log = Logger.getLogger(TestSuite.class.getName());
     private static final String RESOURCE_RQM_NAME = "testsuite";
     private String testSuiteTitle;
@@ -77,17 +77,23 @@ public class TestSuite extends RqmObject<TestSuite> {
                         if(suiteElements.item(selement).getNodeType() == Node.ELEMENT_NODE) {
                             Element suteElem = (Element)suiteElements.item(selement);
                             String testCaseHref = ((Element)suteElem.getElementsByTagName("ns4:testcase").item(0)).getAttribute("href");
-                            String testScriptHref = ((Element)suteElem.getElementsByTagName("ns4:remotescript").item(0)).getAttribute("href");
                             
+                            NodeList nlTestScript = suteElem.getElementsByTagName("ns4:remotescript");
                             TestCase tc = new TestCase(testCaseHref);
-                            TestScript ts = new TestScript(testScriptHref);
-                            tc.getScripts().add(ts);
+                            
+                            if (nlTestScript.getLength() > 0) {
+                                String testScriptHref = ((Element)nlTestScript.item(0)).getAttribute("href");
+                                TestScript ts = new TestScript(testScriptHref);
+                                tc.getScripts().add(ts);
+                            } else {
+                                log.warning(String.format("The testcase %s, has no test scripts", testCaseHref));
+                            }
+
                             tc.setExecutionOrder(executionOrder);
                             getTestcases().add(tc);
                         }
                     }
-                    
-                    
+
                     setSuiteTitle(title);
                 }
             }            
@@ -224,6 +230,11 @@ public class TestSuite extends RqmObject<TestSuite> {
     @Override
     public String getResourceName() {
         return RESOURCE_RQM_NAME;
+    }
+
+    @Override
+    public int compareTo(TestSuite t) {
+        return t.getRqmObjectResourceUrl().compareTo(t.getRqmObjectResourceUrl());
     }
     
 }

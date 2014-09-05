@@ -27,7 +27,11 @@ package net.praqma.jenkins.rqm.unit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import net.praqma.jenkins.rqm.model.TestCase;
+import net.praqma.jenkins.rqm.model.TestScript;
+import net.praqma.jenkins.rqm.model.exception.RQMObjectParseException;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -56,8 +60,29 @@ public class TestCaseTests {
         
         assertEquals("first", cases.get(0).getTestCaseTitle());
         assertEquals("second", cases.get(1).getTestCaseTitle());
-        assertEquals("third", cases.get(2).getTestCaseTitle());
-                
-        
+        assertEquals("third", cases.get(2).getTestCaseTitle());  
     }
+    
+    @Test
+    public void shouldHaveManyElements() throws RQMObjectParseException {
+        
+        //First testcase
+        TestCase tc = new TestCase("testcase:tc1", "TestCase1");
+        TestScript ts = new TestScript("testcript:ts1");
+        ts.setRqmObjectResourceUrl("http://testscript1.dk");
+        tc.setScripts(Arrays.asList(ts));
+        
+        //Second testcase
+        TestCase tc2 = new TestCase("testcase:tc2", "TestCase2");
+        TestScript ts2 = new TestScript("testcript:ts2");
+        ts2.setRqmObjectResourceUrl("http://testscript2.dk");
+        tc2.setScripts(Arrays.asList(ts2));
+        
+        SortedSet<TestCase> tcs = new TreeSet<TestCase>();
+        tcs.add(tc);
+        tcs.add(tc2);
+        
+        assertEquals(2, tcs.size());
+    }
+    
 }

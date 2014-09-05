@@ -28,6 +28,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.tasks.BuildStep;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +41,7 @@ import net.praqma.jenkins.rqm.model.TestCase;
 import net.praqma.jenkins.rqm.model.TestPlan;
 import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuite;
+import net.praqma.jenkins.rqm.model.TestSuiteExecutionRecord;
 import net.praqma.jenkins.rqm.model.exception.RQMObjectParseException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -47,7 +49,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author mads
  */
-public class DummyCollectionStrategy extends RqmCollector {
+public class DummyCollectionStrategy extends RqmTestSuiteExectionRecordCollectionStrategy {
 
     public boolean alwaysFail = false;
     
@@ -66,49 +68,86 @@ public class DummyCollectionStrategy extends RqmCollector {
             return "Dummy collection strategy";
         }        
     }
+
+    @Override
+    public boolean checkSetup() throws IOException {
+        return true;
+    }
     
-
-    public TestPlan defaultTestPlan() throws RQMObjectParseException {
-        TestPlan plan = new TestPlan("TestPlan1");
-        plan.setRqmObjectResourceUrl("testplan:tp1");
-
-        TestSuite suite = new TestSuite(null, "TestSuite1");
-        suite.setRqmObjectResourceUrl("testsuite:ts1");
-
+    public List<TestSuiteExecutionRecord> record() throws RQMObjectParseException {
+        TestSuite rsuite = new TestSuite("suiteurn:1","MyTestSuite");
+        TestPlan tp = defaultTestPlan();
+        
         //First testcase
         TestCase tc = new TestCase("testcase:tc1", "TestCase1");
-
         TestScript ts = new TestScript("testcript:ts1");
+        ts.setRqmObjectResourceUrl("http://testscript1.dk");
         tc.setScripts(Arrays.asList(ts));
         
         //Second testcase
         TestCase tc2 = new TestCase("testcase:tc2", "TestCase2");
-
         TestScript ts2 = new TestScript("testcript:ts2");
+        ts2.setRqmObjectResourceUrl("http://testscript2.dk");
+        tc2.setScripts(Arrays.asList(ts2));
+        
+        SortedSet<TestCase> tcs = new TreeSet<TestCase>();
+        tcs.add(tc);
+        tcs.add(tc2);
+
+        rsuite.setTestcases(tcs);
+        
+        TestSuiteExecutionRecord record = new TestSuiteExecutionRecord();
+        record.setRqmObjectResourceUrl("tseruri:1");
+        record.setTestSuiteExecutionRecordTitle("mytser");
+        record.setTestSuite(rsuite);
+        record.setTestPlan(tp);
+        
+        return Arrays.asList(record);
+    }
+    
+    public TestPlan defaultTestPlan() throws RQMObjectParseException {
+        TestPlan plan = new TestPlan("TestPlan1");
+        plan.setRqmObjectResourceUrl("testplan:tp1");
+
+        TestSuite suite = new TestSuite("testsuite:ts1", "TestSuite1");
+        
+        //First testcase
+        TestCase tc = new TestCase("testcase:tc1", "TestCase1");
+
+        TestScript ts = new TestScript("testcript:ts1");
+        ts.setRqmObjectResourceUrl("http://testscript1.dk");
+        tc.setScripts(Arrays.asList(ts));
+        
+        //Second testcase
+        TestCase tc2 = new TestCase("testcase:tc2", "TestCase2");
+        TestScript ts2 = new TestScript("testcript:ts2");
+        ts2.setRqmObjectResourceUrl("http://testscript2.dk");
         tc2.setScripts(Arrays.asList(ts2));
         
         SortedSet<TestCase> cases = new TreeSet<TestCase>();
         cases.add(tc);
         cases.add(tc2);
 
+        plan.setTestCases(cases);
+        
         suite.setTestcases(cases);
 
-        HashSet<TestSuite> suites = new HashSet<TestSuite>();
+        SortedSet<TestSuite> suites = new TreeSet<TestSuite>();
         suites.add(suite);
 
         plan.setTestSuites(suites);
-
+        
         return plan;
     }
 
     @Override
-    public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
-        return Arrays.asList((T)defaultTestPlan());
+    public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {        
+        return (List<T>) record();
     }
 
     @Override
-    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {
-        return !alwaysFail; 
+    public boolean execute(AbstractBuild<?, ?> build, BuildListener listener, Launcher launcher, List<BuildStep> preBuildSteps, List<BuildStep> postBuildSteps, List<BuildStep> iterativeTestCaseBuilders, List<? extends RqmObject> results) throws Exception {        
+        return super.execute(build, listener, launcher, preBuildSteps, postBuildSteps, iterativeTestCaseBuilders,  results); 
     }
     
     
