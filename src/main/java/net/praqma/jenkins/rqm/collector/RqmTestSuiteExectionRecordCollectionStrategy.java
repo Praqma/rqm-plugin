@@ -163,6 +163,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                     if(!tsSuccess) {
                         listener.getLogger().println( String.format( "Non-zero exit code for test script: %s", ts.getScriptTitle() ) );
                         ts.setExecutionSuccess(false);
+                        build.setResult(Result.FAILURE);
                     } else {
                         executionCounter++;
                     }
@@ -190,7 +191,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                 }
             }
         }
-        return success;
+        return true;
     }
 
 }
