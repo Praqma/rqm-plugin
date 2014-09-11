@@ -24,15 +24,18 @@
 package net.praqma.jenkins.rqm;
 
 import hudson.AbortException;
+import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Descriptor;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tasks.CommandInterpreter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -163,8 +166,9 @@ public class RqmBuilder extends Builder {
             hostName = json.getString("hostName");
             passwd = json.getString("passwd");
             port = json.getInt("port");
+            
             save();
-            return true;
+            return super.configure(req, json);
         }
 
         /**
