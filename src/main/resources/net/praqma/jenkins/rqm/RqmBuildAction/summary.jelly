@@ -1,6 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
     <t:summary icon="/plugin/rqm-plugin/images/64x64/rqm-icon.png">
+    <h3>${it.getDisplayName()}</h3>
         <j:choose>
             <j:when test="${it.isProblem()}">
                 <p>RQM Script Iterator failures detected in the following test cases.</p>

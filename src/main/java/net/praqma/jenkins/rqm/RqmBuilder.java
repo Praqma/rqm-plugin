@@ -44,7 +44,6 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.RqmObject;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -115,8 +114,10 @@ public class RqmBuilder extends Builder {
             console.println(String.format("Failed to retrieve relevant test data. Message was:%n%s", ex.getMessage()));
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
-        } finally {
-            build.addAction(new RqmBuildAction(results));
+        } finally {            
+            RqmBuildAction action = new RqmBuildAction(results);
+            action.setIndex(build.getActions(RqmBuildAction.class).size()+1);
+            build.addAction(action);
         }
  
         return success;

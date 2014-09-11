@@ -40,6 +40,8 @@ public class RqmBuildAction implements Action {
     private final static String NAME = "RQM Test Report";
     //The top level RqmObject. Can be anything
     public final List<? extends RqmObject> topLevelObjects;
+    private int index;
+    
     
     public RqmBuildAction(final List<? extends RqmObject> topLevelObjects) {
         this.topLevelObjects = topLevelObjects;
@@ -52,12 +54,12 @@ public class RqmBuildAction implements Action {
 
     @Override
     public String getDisplayName() {
-        return NAME;
+        return NAME + " " + index;
     }
 
     @Override
     public String getUrlName() {
-        return NAME.replaceAll(" ", "");
+        return NAME.replaceAll(" ", "")+ index;
     }
     
     public List<TestCase> getSelectedTestCases() {
@@ -91,5 +93,19 @@ public class RqmBuildAction implements Action {
     
     public boolean isProblem() {
         return !getFailedTests().isEmpty();
+    }
+
+    /**
+     * @return the index
+     */
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * @param index the index to set
+     */
+    public void setIndex(int index) {
+        this.index = index;
     }
 }
