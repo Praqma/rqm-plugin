@@ -55,7 +55,7 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
         return request;
     }
     
-    public static NameValuePair[] getFilteringProperties(String host, int port, String context, String choseSuites) {
+    public static NameValuePair[] getFilteringProperties(String choseSuites) {
         
         String[] choices = choseSuites.split(",");
         String joined = "";
@@ -104,14 +104,20 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
                     Element suiteElement = (Element)nl;
                     String testSuiteExecutionRecordHref = suiteElement.getElementsByTagName("ns6:identifier").item(0).getTextContent();
                     String tserTitle = suiteElement.getElementsByTagName("ns6:title").item(0).getTextContent();
-                    String testPlanHref = ((Element)suiteElement.getElementsByTagName("ns4:testplan").item(0)).getAttribute("href");
+                    //TODO: This one can be null. Fix in the future, as you can get a null pointer exec
+                    Element testPlanHrefElement = ((Element)suiteElement.getElementsByTagName("ns4:testplan").item(0));
+                    if(testPlanHrefElement != null) {
+                        record.setTestPlan(new TestPlan(testPlanHrefElement.getAttribute("href")).read(parameters).get(0));
+                    } else {
+                        record.setTestPlan(null);
+                    }
                     String testSuiteHref = ((Element)suiteElement.getElementsByTagName("ns4:testsuite").item(0)).getAttribute("href");                    
                     /**
                      * Load the objects
                      */
                     record.setRqmObjectResourceUrl(testSuiteExecutionRecordHref);
                     record.setTestSuite(new TestSuite(testSuiteHref).read(parameters).get(0));
-                    record.setTestPlan(new TestPlan(testPlanHref).read(parameters).get(0));
+                    
                     record.setTestSuiteExecutionRecordTitle(tserTitle);
                 }
                 tsers.add(record);

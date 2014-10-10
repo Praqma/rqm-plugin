@@ -4,10 +4,6 @@
     <f:entry field="projectName" title="${%Project name}">
        <f:textbox/>
     </f:entry>
-    
-    <f:entry field="planName" title="${%Test plan name}">
-        <f:textbox/>
-    </f:entry>
 
     <f:entry field="executionRecordName" title="${%Execution records}">
         <f:textbox/>

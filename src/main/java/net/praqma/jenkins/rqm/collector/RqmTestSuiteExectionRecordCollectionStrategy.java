@@ -56,9 +56,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     
     private static final Logger log = Logger.getLogger(RqmTestSuiteExectionRecordCollectionStrategy.class.getName());
-    public final String executionRecordName;
-    public final String planName;
+    public final String executionRecordName;    
     public final String projectName;
+    
+    @Deprecated
+    public transient String planName;
     
     public RqmTestSuiteExectionRecordCollectionStrategy() { 
         this("exrecor","planname","projname");
@@ -66,8 +68,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     
     @DataBoundConstructor
     public RqmTestSuiteExectionRecordCollectionStrategy(final String executionRecordName, final String planName, final String projectName) {
-        this.executionRecordName = executionRecordName;
-        this.planName = planName;
+        this.executionRecordName = executionRecordName;        
         this.projectName = projectName;
     }
     
@@ -82,7 +83,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
 
     @Override
     public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
-        NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(planName, getPort(), planName, executionRecordName);
+        NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(executionRecordName);
         String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);        
         RqmParameterList list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), request, filterProperties, "GET", null);
         RqmObjectCreator<TestSuiteExecutionRecord> object = new RqmObjectCreator<TestSuiteExecutionRecord>(TestSuiteExecutionRecord.class, list);        
@@ -132,7 +133,9 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
                             @Override
                             public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
                                 RqmBuilder.addToEnvironment(ev, rec.getTestSuite().attributes());
-                                RqmBuilder.addToEnvironment(ev, rec.getTestPlan().attributes());
+                                if(rec.getTestPlan() != null) {
+                                    RqmBuilder.addToEnvironment(ev, rec.getTestPlan().attributes());
+                                }
                                 RqmBuilder.addToEnvironment(ev, tc.attributes());                         
                                 RqmBuilder.addToEnvironment(ev, ts.attributes());
                             }

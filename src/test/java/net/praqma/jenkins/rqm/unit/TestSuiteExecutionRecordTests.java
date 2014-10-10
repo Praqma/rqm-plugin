@@ -37,17 +37,17 @@ public class TestSuiteExecutionRecordTests {
     @Test
     public void correctQueryString() {
         String suites = "mysuite1,mysuite2";
-        NameValuePair[] actual = TestSuiteExecutionRecord.getFilteringProperties("myshost", 9090, "qm", suites);
+        NameValuePair[] actual = TestSuiteExecutionRecord.getFilteringProperties(suites);
         NameValuePair[] expected = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1' or title='mysuite2']/*") };
         assertArrayEquals(expected, actual);
         
         String suiteEmpty = "mysuite1,";        
-        NameValuePair[] actual2 = TestSuiteExecutionRecord.getFilteringProperties("myshost", 9090, "qm", suiteEmpty);
+        NameValuePair[] actual2 = TestSuiteExecutionRecord.getFilteringProperties(suiteEmpty);
         NameValuePair[] expected2 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*") };
         assertArrayEquals(expected2, actual2);  
         
         String suiteSingle = "mysuite1";        
-        NameValuePair[] actual3 = TestSuiteExecutionRecord.getFilteringProperties("myshost", 9090, "qm", suiteSingle);
+        NameValuePair[] actual3 = TestSuiteExecutionRecord.getFilteringProperties(suiteSingle);
         NameValuePair[] expected3 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*") };
         assertArrayEquals(expected3, actual3);          
     }
