@@ -36,11 +36,13 @@ import hudson.model.BuildListener;
 import hudson.model.EnvironmentContributingAction;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.remoting.Future;
 import hudson.tasks.BuildStep;
 import hudson.util.Secret;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.RqmBuilder;
 import net.praqma.jenkins.rqm.RqmCollector;
@@ -67,9 +69,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     private static final Logger log = Logger.getLogger(RqmTestSuiteExectionRecordCollectionStrategy.class.getName());
     public final String executionRecordName;    
     public final String projectName;
-    
-    @Deprecated
-    public transient String planName;
+    private String planName;
     
     public RqmTestSuiteExectionRecordCollectionStrategy() { 
         this("exrecor","planname","projname");
@@ -77,13 +77,27 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     
     @DataBoundConstructor
     public RqmTestSuiteExectionRecordCollectionStrategy(final String executionRecordName, final String planName, final String projectName) {
+        this.planName = planName;
         this.executionRecordName = executionRecordName;        
         this.projectName = projectName;
     }
+
+    /**
+     * @return the planName
+     */
+    public String getPlanName() {
+        return planName;
+    }
+
+    /**
+     * @param planName the planName to set
+     */
+    public void setPlanName(String planName) {
+        this.planName = planName;
+    }
     
     @Extension
-    public static class RqmTestSuiteCollectionStrategyImpl extends RqmCollectorDescriptor {
-        
+    public static class RqmTestSuiteCollectionStrategyImpl extends RqmCollectorDescriptor {        
         @Override
         public String getDisplayName() {
             return "Test suite exection record selection stategy";
@@ -92,7 +106,7 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
 
     @Override
     public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
-        NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(executionRecordName);
+        NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(executionRecordName, planName);
         String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);
         listener.getLogger().println( String.format ("Resource request feed is %s", request) );
 
@@ -100,16 +114,24 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
         if(!StringUtils.isBlank(credentialId) && !credentialId.equals("none")) {
             listener.getLogger().println("Using credentials");
             StandardUsernameCredentials usrName = CredentialsProvider.findCredentialById(credentialId, StandardUsernameCredentials.class, build, Collections.EMPTY_LIST);        
-            UsernamePasswordCredentials userPasswordCreds = (UsernamePasswordCredentials)usrName;
-            String pw = Secret.toString(userPasswordCreds.getPassword());            
-            list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, userPasswordCreds.getUsername(), pw, request, filterProperties, "GET", null);
+            UsernamePasswordCredentials userPasswordCreds = (UsernamePasswordCredentials)usrName;                        
+            list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, userPasswordCreds, request, filterProperties, "GET", null);
         } else {
             listener.getLogger().println("Using legacy");
             list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), request, filterProperties, "GET", null); 
         }
         
-        RqmObjectCreator<TestSuiteExecutionRecord> object = new RqmObjectCreator<TestSuiteExecutionRecord>(TestSuiteExecutionRecord.class, list);        
-        return (List<T>)build.getWorkspace().act(object);
+        /*
+            TODO:
+            Get a list of all plans in the current project. We need to do this since the feed-url does NOT allow us to filter based on names of a test when looking for test
+            suite execution records. 
+        */
+        
+        
+        RqmObjectCreator<TestSuiteExecutionRecord> object = new RqmObjectCreator<TestSuiteExecutionRecord>(TestSuiteExecutionRecord.class, list, listener);        
+        Future<List<TestSuiteExecutionRecord>> result = build.getWorkspace().actAsync(object);
+        return (List<T>) result.get(20, TimeUnit.MINUTES);
+        
     }
 
     @Override
@@ -121,12 +143,13 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
         
         List<TestSuiteExecutionRecord> records = (List<TestSuiteExecutionRecord>)results;
         
-        for(TestSuiteExecutionRecord tser : records) {
-            
+        for(TestSuiteExecutionRecord tser : records) {            
             for(TestCase tc : tser.getAllTestCases()) {
                 totalNumberOfScripts += tc.getScripts().size();
             }
         }
+        
+        listener.getLogger().println(String.format("Found %s test cases", totalNumberOfScripts));
         
         if(preBuildSteps != null) {
             listener.getLogger().println(String.format("Performing pre build step"));

@@ -6,6 +6,7 @@
 
 package net.praqma.jenkins.rqm.model;
 
+import hudson.model.BuildListener;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -55,7 +56,7 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
         return request;
     }
     
-    public static NameValuePair[] getFilteringProperties(String choseSuites) {
+    public static NameValuePair[] getFilteringProperties(String choseSuites, String plan) {
         
         String[] choices = choseSuites.split(",");
         String joined = "";
@@ -71,16 +72,16 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
         String selectionString = choseSuites.length() == 1 ? String.format("title='%s'", choices[0]) : joined;
         
         
-        NameValuePair nvp = new NameValuePair("fields", String.format("feed/entry/content/suiteexecutionrecord[%s]/*", selectionString));              
+        NameValuePair nvp = new NameValuePair("fields", String.format("feed/entry/content/suiteexecutionrecord[%s]/*|testplan[title='%s']", selectionString, plan));              
         return new NameValuePair[] { nvp };
     }
 
     @Override
-    public List<TestSuiteExecutionRecord> readMultiple(RqmParameterList parameters) throws IOException {
+    public List<TestSuiteExecutionRecord> readMultiple(RqmParameterList parameters, BuildListener listener) throws IOException {
         List<TestSuiteExecutionRecord> tsers = new ArrayList<TestSuiteExecutionRecord>();
         RQMHttpClient client = null;
         try {            
-            client = RQMUtilities.createClient(parameters.hostName, parameters.port, parameters.contextRoot, parameters.projectName, parameters.userName, parameters.passwd);
+            client = RQMUtilities.createClient(parameters);
         } catch (MalformedURLException ex) {
             log.logp(Level.SEVERE, this.getClass().getName(), "read", "Caught MalformedURLException in read throwing IO Exception",ex);
             throw new IOException("RqmMethodInvoker exception", ex);
@@ -90,7 +91,10 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
         }
         
         try {
-            Tuple<Integer,String> res = new RQMGetRequest(client, parameters.requestString, parameters.parameterList).executeRequest();
+            RQMGetRequest rq = new RQMGetRequest(client, parameters.requestString, parameters.parameterList);
+            listener.getLogger().println(String.format("Fetching test suite execution records using this url: %s", rq));
+            Tuple<Integer,String> res = rq.executeRequest();
+            listener.getLogger().println(String.format("Done fetching execution records"));
             
             if(res.t1 != 200) {
                 throw new RequestException("Failed to load test suite execution record. Response written to log.", res);
@@ -114,7 +118,7 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
                     //TODO: This one can be null. Fix in the future, as you can get a null pointer exec
                     Element testPlanHrefElement = ((Element)suiteElement.getElementsByTagName("ns4:testplan").item(0));
                     if(testPlanHrefElement != null) {
-                        record.setTestPlan(new TestPlan(testPlanHrefElement.getAttribute("href")).read(parameters).get(0));
+                        record.setTestPlan(new TestPlan(testPlanHrefElement.getAttribute("href")).read(parameters, listener).get(0));
                     } else {
                         record.setTestPlan(null);
                     }
@@ -123,10 +127,11 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
                      * Load the objects
                      */
                     record.setRqmObjectResourceUrl(testSuiteExecutionRecordHref);
-                    record.setTestSuite(new TestSuite(testSuiteHref).read(parameters).get(0));
+                    record.setTestSuite(new TestSuite(testSuiteHref).read(parameters, listener).get(0));
                     
                     record.setTestSuiteExecutionRecordTitle(tserTitle);
                 }
+
                 tsers.add(record);
             }
             

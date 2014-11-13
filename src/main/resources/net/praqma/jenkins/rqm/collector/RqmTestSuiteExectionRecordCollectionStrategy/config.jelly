@@ -5,6 +5,11 @@
        <f:textbox/>
     </f:entry>
 
+    <f:entry field="planName" title="${%Plan name}">
+       <f:textbox/>
+    </f:entry>
+
+
     <f:entry field="executionRecordName" title="${%Execution records}">
         <f:textbox/>
     </f:entry>

@@ -4,6 +4,7 @@
  */
 package net.praqma.jenkins.rqm.model;
 
+import hudson.model.BuildListener;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
@@ -63,10 +64,10 @@ public class TestScript extends RqmObject<TestScript> {
     }
 
     @Override
-    public List<TestScript> read(RqmParameterList parameters) throws IOException {
+    public List<TestScript> read(RqmParameterList parameters, BuildListener listener) throws IOException {
         RQMHttpClient client = null;
         try {            
-            client = RQMUtilities.createClient(parameters.hostName, parameters.port, parameters.contextRoot, parameters.projectName, parameters.userName, parameters.passwd);
+            client = RQMUtilities.createClient(parameters);
         } catch (MalformedURLException ex) {
             log.logp(Level.SEVERE, this.getClass().getName(), "read", "Caught MalformedURLException in read throwing IO Exception",ex);
             throw new IOException("RqmMethodInvoker exception", ex);
@@ -91,7 +92,7 @@ public class TestScript extends RqmObject<TestScript> {
     }
 
     @Override
-    public List<TestScript> createOrUpdate(RqmParameterList parameters) {
+    public List<TestScript> createOrUpdate(RqmParameterList parameters, BuildListener listener) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

@@ -4,6 +4,7 @@
  */
 package net.praqma.jenkins.rqm.request;
 
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import java.io.Serializable;
 import java.util.Arrays;
 import net.praqma.jenkins.rqm.model.exception.ClientCreationException;
@@ -19,12 +20,18 @@ public class RqmParameterList implements Serializable {
     public final String contextRoot;
     public String requestString;
     public final String projectName;
-    public String userName;
-    public String passwd;
+ 
     public int port;
     public String methodType;
     public String requestContent;
+    private UsernamePasswordCredentials credentials;
     
+    @Deprecated
+    public String userName;
+    @Deprecated
+    public String passwd;
+    
+    @Deprecated
     public RqmParameterList(final String hostName, final int port, final String contextRoot, final String projectName, final String userName, final String passwd, final String requestString, final NameValuePair[] parameterList, final String methodType, final String requestContent) throws ClientCreationException {
         this.hostName = hostName;
         this.port = port;
@@ -36,6 +43,18 @@ public class RqmParameterList implements Serializable {
         this.parameterList = parameterList;       
         this.methodType = methodType;
         this.requestContent = requestContent;
+    }
+    
+    public RqmParameterList(final String hostName, final int port, final String contextRoot, final String projectName, final UsernamePasswordCredentials credentials, final String requestString, final NameValuePair[] parameterList, final String methodType, final String requestContent) throws ClientCreationException {
+        this.hostName = hostName;
+        this.port = port;
+        this.projectName = projectName;
+        this.contextRoot = contextRoot;
+        this.requestString = requestString;
+        this.parameterList = parameterList;       
+        this.methodType = methodType;
+        this.requestContent = requestContent;
+        this.credentials = credentials;
     }
 
     @Override
@@ -56,6 +75,20 @@ public class RqmParameterList implements Serializable {
     
     private String fillParameter(String key, String value) {
         return String.format("%s : %s%n", key, value);
+    }
+
+    /**
+     * @return the credentials
+     */
+    public UsernamePasswordCredentials getCredentials() {
+        return credentials;
+    }
+
+    /**
+     * @param credentials the credentials to set
+     */
+    public void setCredentials(UsernamePasswordCredentials credentials) {
+        this.credentials = credentials;
     }
     
     

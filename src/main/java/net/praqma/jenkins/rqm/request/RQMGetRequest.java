@@ -26,9 +26,12 @@ package net.praqma.jenkins.rqm.request;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.ws.http.HTTPException;
 import net.praqma.jenkins.rqm.model.exception.LoginException;
@@ -37,6 +40,7 @@ import net.praqma.util.structure.Tuple;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.GetMethod;
 
 /**
@@ -106,4 +110,14 @@ public class RQMGetRequest implements RQMRequest {
         }
         return result;
     }
+
+    @Override
+    public String toString() {
+        try {
+            return URLDecoder.decode(method.getURI().toString(), "UTF-8");            
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
 }

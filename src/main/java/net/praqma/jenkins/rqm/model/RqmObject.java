@@ -3,6 +3,7 @@
  * and open the template in the editor.
  */
 package net.praqma.jenkins.rqm.model;
+import hudson.model.BuildListener;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -187,9 +188,9 @@ public abstract class RqmObject<T> implements Serializable {
      * @return a 'constructed' rqm object. Read populates the object given an array of parameters
      * @throws IOException 
      */
-    public List<T> read(RqmParameterList parameters) throws IOException { return null; }
-    public List<T> readMultiple( RqmParameterList parameters ) throws IOException {
-        return read(parameters);
+    public List<T> read(RqmParameterList parameters, BuildListener listener) throws IOException { return null; }
+    public List<T> readMultiple( RqmParameterList parameters, BuildListener listener ) throws IOException {
+        return read(parameters, listener);
     }
     
     /**
@@ -199,15 +200,15 @@ public abstract class RqmObject<T> implements Serializable {
      * @return Create or updates the object given an array of parameters. Use the initializeSingleResource() method to parse the object given the returned XML
      * @throws IOException 
      */
-    public List<T> createOrUpdate(RqmParameterList parameters) throws IOException { return null; } 
+    public List<T> createOrUpdate(RqmParameterList parameters, BuildListener listener) throws IOException { return null; } 
     
     public HashMap<String,String> attributes() {
         return new HashMap<String, String>();
     }
     
-    public static <T extends RqmObject> T createObject(Class<T> clazz, RqmParameterList parameters) throws InstantiationException, IllegalAccessException, IOException {
+    public static <T extends RqmObject> T createObject(Class<T> clazz, RqmParameterList parameters, BuildListener listener) throws InstantiationException, IllegalAccessException, IOException {
         T t = clazz.newInstance();
-        t.read(parameters);
+        t.read(parameters, listener);
         return t;
     }
 }

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
@@ -133,6 +134,11 @@ public class RqmBuilder extends Builder {
             collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());
             results = collectionStrategy.withCredentials(credentialId).collect(listener, build);            
             success = collectionStrategy.withCredentials(credentialId).execute(build, listener, launcher, preBuildSteps, postBuildSteps, iterativeTestCaseBuilders, results);            
+        } catch (TimeoutException ex) {
+            console.println(String.format("Unable to complete retrieval of RQM data, timeout exceeded"));
+            log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Timeout", ex);
+            success = false;
+            throw new AbortException("Unable to complete retrieval of RQM data, timeout exceeded. Trace written to log.");
         } catch (Exception ex) {
             success = false;
             console.println(String.format("Failed to retrieve relevant test data.%n%s", ex.getMessage()));

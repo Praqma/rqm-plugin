@@ -24,6 +24,7 @@
 package net.praqma.jenkins.rqm;
 
 import hudson.FilePath;
+import hudson.model.BuildListener;
 import hudson.remoting.VirtualChannel;
 import java.io.File;
 import java.io.IOException;
@@ -38,19 +39,21 @@ import net.praqma.jenkins.rqm.request.RqmParameterList;
  */
 public class RqmObjectCreator<T extends RqmObject> implements FilePath.FileCallable<List<T>> {
     private final RqmParameterList parameters;
+    private final BuildListener listener;
     private final T target;
  
-    public RqmObjectCreator(Class<T> target, RqmParameterList parameters) throws IllegalAccessException, InstantiationException {
+    public RqmObjectCreator(Class<T> target, RqmParameterList parameters, BuildListener listener) throws IllegalAccessException, InstantiationException {
         this.parameters = parameters;
+        this.listener = listener;
         this.target = target.newInstance();
     }
 
     @Override
     public List<T> invoke(File f, VirtualChannel channel) throws IOException, InterruptedException {
         if(parameters.methodType.equals("GET")) {
-            return (List<T>)target.readMultiple(parameters);
+            return (List<T>)target.readMultiple(parameters, listener);
         } else {
-            return (List<T>)target.createOrUpdate(parameters);
+            return (List<T>)target.createOrUpdate(parameters, listener);
         }        
     }
 }

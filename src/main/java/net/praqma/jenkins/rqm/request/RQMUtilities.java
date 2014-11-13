@@ -23,6 +23,7 @@
  */
 package net.praqma.jenkins.rqm.request;
 
+import hudson.util.Secret;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
@@ -60,13 +61,16 @@ public class RQMUtilities {
     public static String getSingleFeedUrl(String qmServerURL, String projectAlias, String resourceType) {
         return qmServerURL+SERVICE+RESOURCES+projectAlias+"/"+resourceType;
     }
-    
-   
-    public static RQMHttpClient createClient(String host, int port, String contextRoot, String project, String user, String password) throws MalformedURLException, ClientCreationException {
+
+    public static RQMHttpClient createClient(RqmParameterList parameters) throws MalformedURLException, ClientCreationException {
         if (client == null) {
-            client = new RQMHttpClient(host, port, contextRoot, project, user, password);
+            if(parameters.getCredentials() == null) {
+                client = new RQMHttpClient(parameters.hostName, parameters.port, parameters.contextRoot, parameters.projectName, parameters.userName, parameters.passwd);
+            } else {
+                client = new RQMHttpClient(parameters.hostName, parameters.port, parameters.contextRoot, parameters.projectName, parameters.getCredentials().getUsername(), Secret.toString(parameters.getCredentials().getPassword()));
+            }
         }
-        return client;
+        return client;        
     }
     
 }

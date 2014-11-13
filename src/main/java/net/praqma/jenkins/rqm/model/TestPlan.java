@@ -4,6 +4,7 @@
  */
 package net.praqma.jenkins.rqm.model;
 
+import hudson.model.BuildListener;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -208,10 +209,10 @@ public class TestPlan extends RqmObject<TestPlan> {
      * @throws IOException 
      */
     @Override
-    public List<TestPlan> read(RqmParameterList parameters) throws IOException {
+    public List<TestPlan> read(RqmParameterList parameters, BuildListener listener) throws IOException {
         RQMHttpClient client = null;
         try {            
-            client = RQMUtilities.createClient(parameters.hostName, parameters.port, parameters.contextRoot, parameters.projectName, parameters.userName, parameters.passwd);
+            client = RQMUtilities.createClient(parameters);
         } catch (MalformedURLException ex) {
             log.logp(Level.SEVERE, this.getClass().getName(), "read", "Caught MalformedURLException in read throwing IO Exception",ex);
             throw new IOException("RqmMethodInvoker exception", ex);
@@ -226,22 +227,22 @@ public class TestPlan extends RqmObject<TestPlan> {
 
             for(TestCase tc : getTestCases()) {
                 parameters.requestString = tc.getRqmObjectResourceUrl();
-                tc.read(parameters);
+                tc.read(parameters, listener);
                 for(TestScript ts : tc.getScripts()) {
                     parameters.requestString = ts.getRqmObjectResourceUrl();
-                    ts.read(parameters);
+                    ts.read(parameters, listener);
                 }                
             }
             
             for(TestSuite suites : getTestSuites()) {
                 parameters.requestString = suites.getRqmObjectResourceUrl();
-                suites.read(parameters);                
+                suites.read(parameters, listener);                
                 for(TestCase tc : suites.getTestcases()) {
                     parameters.requestString = tc.getRqmObjectResourceUrl();
-                    tc.read(parameters);                    
+                    tc.read(parameters, listener);                    
                     for(TestScript ts : tc.getScripts()) {
                         parameters.requestString = ts.getRqmObjectResourceUrl();
-                        ts.read(parameters);
+                        ts.read(parameters, listener);
                     }                    
                 }                
             }
@@ -263,6 +264,11 @@ public class TestPlan extends RqmObject<TestPlan> {
     @Override
     public String getResourceName() {
         return RESOURCE_RQM_NAME;
+    }
+    
+    public static String getResourceFeedUrl(String host, int port, String context, String project) throws UnsupportedEncodingException {
+        String request = String.format("%s:%s/%s/service/com.ibm.rqm.integration.service.IIntegrationService/resources/%s/%s", host, port, context, URLEncoder.encode(project,"UTF-8"), RESOURCE_RQM_NAME);                               
+        return request;
     }
 
 }

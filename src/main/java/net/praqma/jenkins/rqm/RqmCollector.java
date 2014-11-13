@@ -42,10 +42,14 @@ import org.apache.commons.lang.StringUtils;
  */
 public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector> implements ExtensionPoint {    
     
+    @Deprecated
+    private String passwd;
+    
+    @Deprecated
+    private String usrName;
+    
     private String hostName;
     private String contextRoot;
-    private String usrName;
-    private String passwd;
     private int port;
     protected String credentialId;
     
@@ -140,6 +144,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
     /**
      * @return the usrName
      */
+    @Deprecated
     public String getUsrName() {
         return usrName;
     }
@@ -147,6 +152,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
     /**
      * @param usrName the usrName to set
      */
+    @Deprecated
     public void setUsrName(String usrName) {
         this.usrName = usrName;
     }
@@ -154,6 +160,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
     /**
      * @return the passwd
      */
+    @Deprecated
     public String getPasswd() {
         return passwd;
     }
@@ -161,6 +168,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
     /**
      * @param passwd the passwd to set
      */
+    @Deprecated
     public void setPasswd(String passwd) {
         this.passwd = passwd;
     }

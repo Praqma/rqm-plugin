@@ -4,6 +4,7 @@
  */
 package net.praqma.jenkins.rqm.model;
 
+import hudson.model.BuildListener;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -42,12 +43,12 @@ public class TestCaseExecutionRecord extends RqmObject<TestCaseExecutionRecord> 
     }
 
     @Override
-    public List<TestCaseExecutionRecord> read(RqmParameterList parameters) throws IOException {
+    public List<TestCaseExecutionRecord> read(RqmParameterList parameters, BuildListener listener) throws IOException {
         throw new UnsupportedOperationException("Not implemented yet");
     }
     
     @Override
-    public List<TestCaseExecutionRecord> createOrUpdate(RqmParameterList parameters) throws IOException {
+    public List<TestCaseExecutionRecord> createOrUpdate(RqmParameterList parameters, BuildListener listener) throws IOException {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
