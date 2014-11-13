@@ -47,6 +47,7 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
     private String usrName;
     private String passwd;
     private int port;
+    protected String credentialId;
     
     public RqmCollector() { }
     
@@ -72,14 +73,18 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
         return true;
     }
     
-    
-    public void setup(String hostname, String contextRoot, String usrName, String passwd, int port) {
-        setHostName(hostname);
-        setContextRoot(contextRoot);
-        setUsrName(usrName);
-        setPasswd(passwd);
-        setPort(port);       
+    public RqmCollector withCredentials(String credentialsId) {
+        this.credentialId = credentialsId;
+        return this;
     }
+    
+    public void setup(String hostname, String contextRoot, String usrName, String passwd, int port) {       
+        setContextRoot(contextRoot);
+        setPasswd(passwd);
+        setPort(port);
+        setUsrName(usrName);
+        setHostName(hostname);
+    }    
     
     public boolean checkSetup() throws IOException {
         
@@ -95,14 +100,6 @@ public abstract class RqmCollector extends AbstractDescribableImpl<RqmCollector>
         
         if(StringUtils.isBlank(getContextRoot())) {
             errors.add("Context root not defined in global configuration");
-        }
-        
-        if(StringUtils.isBlank(getUsrName())) {
-            errors.add("Username not defined in global configuration");
-        }
-        
-        if(StringUtils.isBlank(getPasswd())) {
-            errors.add("Password not defined in global configuration");
         }
         
         if(!errors.isEmpty()) {

@@ -14,13 +14,14 @@
            <f:textbox/>
         </f:entry>
 
-        <f:entry field="usrName" title="${%Username}" default="user">
+        <f:entry field="usrName" title="${%Username}" default="user" description="This field is deprecated, use PasswordUsername credentials instead">
            <f:textbox/>
         </f:entry>
 
-        <f:entry field="passwd" title="${%Password}" default="password">
+        <f:entry field="passwd" title="${%Password}" default="password" description="This field is deprecated, use PasswordUsername credentials instead">
            <f:password/>
         </f:entry>
+
     </f:section>
     
   

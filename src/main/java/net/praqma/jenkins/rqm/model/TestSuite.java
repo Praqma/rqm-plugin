@@ -173,6 +173,11 @@ public class TestSuite extends RqmObject<TestSuite> implements Comparable<TestSu
         
         try {
             Tuple<Integer,String> res = new RQMGetRequest(client, getRqmObjectResourceUrl(), null).executeRequest();            
+            
+            if(res.t1 != 200) {
+                throw new RequestException("Failed to load test suite. Response written to log.", res);
+            }
+            
             log.fine(res.t2);
             
             TestSuite suite = this.initializeSingleResource(res.t2);

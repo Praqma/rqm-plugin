@@ -26,6 +26,7 @@ package net.praqma.jenkins.rqm.request;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.logging.Logger;
@@ -85,20 +86,17 @@ public class RQMGetRequest implements RQMRequest {
             while((line = reader.readLine()) != null)  {
                 builder.append(line);
             }
-            
-            reader.close();
 
-            
+            reader.close();            
             result.t1 = response;
-            result.t2 = builder.toString();
-            
-        } catch (HTTPException ex) {
-            
+            result.t2 = builder.toString();            
+        } catch (HTTPException ex) {            
             log.severe(ex.getMessage());
             result.t1 = ex.getStatusCode();
             result.t2 = ex.getMessage() != null ? ex.getMessage() : "No message";
-            throw new RequestException(result, ex);
-            
+            throw new RequestException(result, ex);            
+        } catch (UnknownHostException ioex) {
+            throw new RequestException( String.format( "Host %s is unreachable", ioex.getMessage()), result  );
         } catch (IOException ioex) {
             result.t1 = -1;
             result.t2 = ioex.getMessage() != null ? ioex.getMessage() : "No message";

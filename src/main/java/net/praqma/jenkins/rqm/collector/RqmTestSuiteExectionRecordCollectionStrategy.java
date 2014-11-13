@@ -24,6 +24,10 @@
 
 package net.praqma.jenkins.rqm.collector;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -31,7 +35,11 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.EnvironmentContributingAction;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.tasks.BuildStep;
+import hudson.util.Secret;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 import net.praqma.jenkins.rqm.RqmBuilder;
@@ -44,6 +52,7 @@ import net.praqma.jenkins.rqm.model.TestScript;
 import net.praqma.jenkins.rqm.model.TestSuiteExecutionRecord;
 import net.praqma.jenkins.rqm.request.RqmParameterList;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -84,8 +93,21 @@ public class RqmTestSuiteExectionRecordCollectionStrategy extends RqmCollector {
     @Override
     public <T extends RqmObject> List<T> collect(BuildListener listener, AbstractBuild<?, ?> build) throws Exception {
         NameValuePair[] filterProperties = TestSuiteExecutionRecord.getFilteringProperties(executionRecordName);
-        String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);        
-        RqmParameterList list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), request, filterProperties, "GET", null);
+        String request = TestSuiteExecutionRecord.getResourceFeedUrl(getHostName(), getPort(), getContextRoot(), projectName);
+        listener.getLogger().println( String.format ("Resource request feed is %s", request) );
+
+        RqmParameterList list;
+        if(!StringUtils.isBlank(credentialId) && !credentialId.equals("none")) {
+            listener.getLogger().println("Using credentials");
+            StandardUsernameCredentials usrName = CredentialsProvider.findCredentialById(credentialId, StandardUsernameCredentials.class, build, Collections.EMPTY_LIST);        
+            UsernamePasswordCredentials userPasswordCreds = (UsernamePasswordCredentials)usrName;
+            String pw = Secret.toString(userPasswordCreds.getPassword());            
+            list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, userPasswordCreds.getUsername(), pw, request, filterProperties, "GET", null);
+        } else {
+            listener.getLogger().println("Using legacy");
+            list = new RqmParameterList(getHostName(), getPort(), getContextRoot(), projectName, getUsrName(), getPasswd(), request, filterProperties, "GET", null); 
+        }
+        
         RqmObjectCreator<TestSuiteExecutionRecord> object = new RqmObjectCreator<TestSuiteExecutionRecord>(TestSuiteExecutionRecord.class, list);        
         return (List<T>)build.getWorkspace().act(object);
     }

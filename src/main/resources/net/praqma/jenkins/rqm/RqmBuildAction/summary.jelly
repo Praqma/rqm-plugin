@@ -11,8 +11,15 @@
                     </j:forEach>
                 </ul>
             </j:when>
-            <j:otherwise> 
-                No problems detected
+            <j:otherwise>
+                <j:choose>
+                    <j:when test="${it.getSelectedTestCases().size() > 0}">
+                        No problems detected
+                    </j:when>
+                    <j:otherwise>
+                        No test cases present
+                    </j:otherwise>
+                </j:choose>
             </j:otherwise>
         </j:choose>
     </t:summary>

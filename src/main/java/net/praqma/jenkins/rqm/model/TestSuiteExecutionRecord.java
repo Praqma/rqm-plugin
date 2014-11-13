@@ -88,8 +88,15 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
             log.logp(Level.SEVERE, this.getClass().getName(), "read", "Caught ClientCreationException in read throwing IO Exception", cre);
             throw new IOException("RqmMethodInvoker exception(ClientCreationException)", cre);
         }
+        
         try {
             Tuple<Integer,String> res = new RQMGetRequest(client, parameters.requestString, parameters.parameterList).executeRequest();
+            
+            if(res.t1 != 200) {
+                throw new RequestException("Failed to load test suite execution record. Response written to log.", res);
+            }
+            
+            
             //Look for ns4:suiteexecutionrecord.
             //Add testplan and testsuite to the record
             Document doc = RqmObject.getDocumentReader(res.t2);
@@ -125,8 +132,6 @@ public class TestSuiteExecutionRecord extends RqmObject<TestSuiteExecutionRecord
             
              
         } catch (LoginException ex) {
-            Logger.getLogger(TestSuiteExecutionRecord.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (RequestException ex) {
             Logger.getLogger(TestSuiteExecutionRecord.class.getName()).log(Level.SEVERE, null, ex);
         } catch (RQMObjectParseException ex) {
             Logger.getLogger(TestSuiteExecutionRecord.class.getName()).log(Level.SEVERE, null, ex);

@@ -23,19 +23,25 @@
  */
 package net.praqma.jenkins.rqm;
 
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsMatcher;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernameCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import hudson.AbortException;
-import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Descriptor;
+import hudson.model.ItemGroup;
+import hudson.security.ACL;
 import hudson.tasks.BuildStep;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.tasks.CommandInterpreter;
+import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -47,6 +53,7 @@ import java.util.logging.Logger;
 import jenkins.model.Jenkins;
 import net.praqma.jenkins.rqm.model.RqmObject;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -60,13 +67,24 @@ public class RqmBuilder extends Builder {
     public final List<BuildStep> postBuildSteps;
     public final List<BuildStep> iterativeTestCaseBuilders;
     public final RqmCollector collectionStrategy;
+    private String credentialId;
      
     @DataBoundConstructor
-    public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) {        
+    public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps, String credentialId) {        
         this.collectionStrategy = collectionStrategy;
         this.preBuildSteps = preBuildSteps;
         this.postBuildSteps = postBuildSteps;
         this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;
+        this.credentialId = credentialId;
+        collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());        
+    }
+    
+    @Deprecated
+    public RqmBuilder(RqmCollector collectionStrategy, final List<BuildStep> iterativeTestCaseBuilders, final List<BuildStep> preBuildSteps, final List<BuildStep> postBuildSteps) {        
+        this.collectionStrategy = collectionStrategy;
+        this.preBuildSteps = preBuildSteps;
+        this.postBuildSteps = postBuildSteps;
+        this.iterativeTestCaseBuilders = iterativeTestCaseBuilders;        
         collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());        
     }
 
@@ -108,13 +126,16 @@ public class RqmBuilder extends Builder {
         
         boolean success = true;
         List<? extends RqmObject> results = null;
-        try {            
-            collectionStrategy.checkSetup();
-            results = collectionStrategy.collect(listener, build);            
-            success = collectionStrategy.execute(build, listener, launcher, preBuildSteps, postBuildSteps, iterativeTestCaseBuilders, results);            
+        try {
+            console.println( String.format( "Connecting to RQM server @ %s", getGlobalHostName()) );
+            console.println( String.format( "Using port %s", getGlobalPort()) );
+            console.println( String.format( "Context root is '%s'", getGlobalContextRoot()));
+            collectionStrategy.setup(getGlobalHostName(), getGlobalContextRoot(), getGlobalUsrName(), getGlobalPasswd(), getGlobalPort());
+            results = collectionStrategy.withCredentials(credentialId).collect(listener, build);            
+            success = collectionStrategy.withCredentials(credentialId).execute(build, listener, launcher, preBuildSteps, postBuildSteps, iterativeTestCaseBuilders, results);            
         } catch (Exception ex) {
             success = false;
-            console.println(String.format("Failed to retrieve relevant test data. Message was:%n%s", ex.getMessage()));
+            console.println(String.format("Failed to retrieve relevant test data.%n%s", ex.getMessage()));
             log.logp(Level.SEVERE, this.getClass().getName(), "perform", "Failed to retrieve relavant test data", ex);
             throw new AbortException("Error in retrieving data from RQM, trace written to log");
         } finally {            
@@ -124,6 +145,20 @@ public class RqmBuilder extends Builder {
         }
  
         return success;
+    }
+
+    /**
+     * @return the credentialId
+     */
+    public String getCredentialId() {
+        return credentialId;
+    }
+
+    /**
+     * @param credentialId the credentialId to set
+     */
+    public void setCredentialId(String credentialId) {
+        this.credentialId = credentialId;
     }
     
     @Extension
@@ -152,7 +187,18 @@ public class RqmBuilder extends Builder {
             List<RqmCollectorDescriptor> descriptors = new ArrayList<RqmCollectorDescriptor>();
             descriptors.addAll(RqmCollector.getDescriptors());
             return descriptors;
-        } 
+        }
+        
+        public ListBoxModel doFillCredentialIdItems(final @AncestorInPath ItemGroup<?> context) {
+            final List<StandardUsernameCredentials> credentials = CredentialsProvider.lookupCredentials(StandardUsernameCredentials.class, context, ACL.SYSTEM);            
+            StandardListBoxModel model2 = (StandardListBoxModel) new StandardListBoxModel().withEmptySelection().withMatching(new CredentialsMatcher() {
+                @Override
+                public boolean matches(Credentials item) {
+                    return item instanceof UsernamePasswordCredentials;
+                }
+            }, credentials);            
+            return model2;
+        }
         
         @Override
         public String getDisplayName() {
