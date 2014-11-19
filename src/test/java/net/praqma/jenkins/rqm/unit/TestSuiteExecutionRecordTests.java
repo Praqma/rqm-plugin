@@ -39,17 +39,17 @@ public class TestSuiteExecutionRecordTests {
         String suites = "mysuite1,mysuite2";
         String myPlan = "myplan";
         NameValuePair[] actual = TestSuiteExecutionRecord.getFilteringProperties(suites, myPlan);
-        NameValuePair[] expected = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1' or title='mysuite2']/*") };
+        NameValuePair[] expected = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1' or title='mysuite2']/*|testplan[title='myplan']") };
         assertArrayEquals(expected, actual);
         
         String suiteEmpty = "mysuite1,";        
         NameValuePair[] actual2 = TestSuiteExecutionRecord.getFilteringProperties(suiteEmpty, myPlan);
-        NameValuePair[] expected2 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*") };
+        NameValuePair[] expected2 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*|testplan[title='myplan']") };
         assertArrayEquals(expected2, actual2);  
         
         String suiteSingle = "mysuite1";        
         NameValuePair[] actual3 = TestSuiteExecutionRecord.getFilteringProperties(suiteSingle, myPlan);
-        NameValuePair[] expected3 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*") };
+        NameValuePair[] expected3 = { new NameValuePair("fields", "feed/entry/content/suiteexecutionrecord[title='mysuite1']/*|testplan[title='myplan']") };
         assertArrayEquals(expected3, actual3);          
     }
 }
