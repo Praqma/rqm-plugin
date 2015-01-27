@@ -3,6 +3,7 @@
  * and open the template in the editor.
  */
 package net.praqma.jenkins.rqm.model;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.BuildListener;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -202,6 +203,10 @@ public abstract class RqmObject<T> implements Serializable {
      */
     public List<T> createOrUpdate(RqmParameterList parameters, BuildListener listener) throws IOException { return null; } 
     
+    /**
+     * @return A map containing the environment variables to contribute. Never null
+     */
+    @NonNull
     public HashMap<String,String> attributes() {
         return new HashMap<String, String>();
     }

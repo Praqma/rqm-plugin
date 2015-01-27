@@ -105,7 +105,12 @@ public class TestCase extends RqmObject<TestCase> implements Comparable<TestCase
     @Override
     public HashMap<String, String> attributes() {
         HashMap<String,String> attr = new HashMap<String, String>();
-        attr.put("testcase_title", testCaseTitle);
+        attr.put("rqm_testcase_title", testCaseTitle);
+        try {
+            attr.put("rqm_testcase_id", ""+getInternalId());
+        } catch (Exception ex) {
+            log.log(Level.SEVERE, "Failed to add internal id for test case", ex);
+        }
         return attr;
     }
 

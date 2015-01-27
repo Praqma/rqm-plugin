@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -215,8 +214,14 @@ public class TestSuite extends RqmObject<TestSuite> implements Comparable<TestSu
     @Override
     public HashMap<String, String> attributes() {
         HashMap<String,String> attr = new HashMap<String, String>();
-        attr.put("testsuite_title", testSuiteTitle);
-        return attr;
+        try {
+            attr.put("rqm_testsuite_title", testSuiteTitle);
+            attr.put("rqm_testsuite_id", ""+getInternalId());            
+        } catch (RQMObjectParseException ex) {
+            log.log(Level.SEVERE, "Failed to add internal id for test suite", ex);
+        } finally {
+            return attr;
+        }
     }
 
     /**

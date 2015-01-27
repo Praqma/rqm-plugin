@@ -107,7 +107,12 @@ public class TestScript extends RqmObject<TestScript> {
     public HashMap<String, String> attributes() {
         HashMap<String,String> attr = new HashMap<String, String>();
         attr.putAll(customAttributes);
-        attr.put("testscript_title", scriptTitle);
+        attr.put("rqm_testscript_title", scriptTitle);
+        try {
+            attr.put("rqm_testscript_id", ""+getInternalId());
+        } catch (Exception ex) {
+            log.log(Level.SEVERE, "Failed to add internal id for test script", ex);
+        }
         return attr;
     }
 
