@@ -1,3 +1,7 @@
+---
+maintainer: MadsNielsen
+---
+
 rqm-plugin
 =================
 
